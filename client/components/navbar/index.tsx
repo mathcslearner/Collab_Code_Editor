@@ -1,6 +1,7 @@
 import { Pencil } from "lucide-react"
 import Image from "next/image"
 import Logo from "@/assets/logo.svg"
+import { UserButton } from "@clerk/nextjs"
 
 const Navbar = () => {
     return (
@@ -16,6 +17,7 @@ const Navbar = () => {
                     </div>
                 </div>
             </div>
+            <UserButton />
         </div>
     )
 }
