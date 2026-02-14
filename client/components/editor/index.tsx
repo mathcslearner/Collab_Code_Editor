@@ -6,6 +6,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../ui/resi
 import { Editor, OnMount } from "@monaco-editor/react"
 import { useRef } from "react"
 import monaco from "monaco-editor"
+import Sidebar from "./sidebar"
 
 const CodeEditor = () => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
@@ -16,7 +17,7 @@ const CodeEditor = () => {
 
     return (
         <>
-        <div className="h-full w-52"></div>
+        <Sidebar />
         <ResizablePanelGroup orientation="horizontal">
             <ResizablePanel minSize={30} defaultSize={60} className="flex flex-col p-2">
                 <div className="h-10 w-full flex gap-2">
@@ -28,7 +29,17 @@ const CodeEditor = () => {
                     </Button>
                 </div>
                 <div className="grow w-full overflow-hidden rounded-lg relative">
-                    <Editor height={"100%"} defaultLanguage="typescript" theme="vs-dark" onMount={handleEditorMount}/>
+                    <Editor height={"100%"} defaultLanguage="typescript" theme="vs-dark" onMount={handleEditorMount} 
+                            options={{
+                                minimap: {
+                                    enabled: false
+                                },
+                                padding: {
+                                    bottom: 4,
+                                    top: 4
+                                },
+                                scrollBeyondLastLine: false
+                            }}/>
                 </div>
             </ResizablePanel>
             <ResizableHandle />
