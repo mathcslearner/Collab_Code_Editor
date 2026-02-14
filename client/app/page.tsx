@@ -12,7 +12,7 @@ export default async function Home() {
 
   return (
     <div className="flex w-screen overflow-hidden overscroll-none flex-col h-screen bg-background">
-      <div className="w-full max-w-screen-md px-8 flex flex-col items-center">
+      <div className="w-full px-8 flex flex-col items-center">
         <h1 className="text-2xl font-medium text-center mt-32">
           A Collaborative Cloud Code Editor, AI-Powered, Auto-Scaling Copilot
         </h1>
