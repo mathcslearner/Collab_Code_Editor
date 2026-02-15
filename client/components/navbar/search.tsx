@@ -22,9 +22,9 @@ const DashboardNavbarSearch = () => {
     }, [search])
 
     return (
-        <div className="relative h-9 w-44 flex items-center justify-start">
+        <div className="relative h-9 w-44 flex items-center justify-start shrink-0">
             <Search className="w-4 h-4 absolute left-2 text-muted-foreground" />
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search Projects..." className="pl-8" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search Projects..." className="pl-8 w-full" />
 
         </div>
     )

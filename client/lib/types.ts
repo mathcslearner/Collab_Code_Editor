@@ -1,7 +1,8 @@
 export type User = {
     id: string
     name: string 
-    email: string 
+    email: string
+    virtualbox: VirtualBox[]
 }
 
 export type VirtualBox = {

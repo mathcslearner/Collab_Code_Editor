@@ -1,12 +1,11 @@
-import { Pencil } from "lucide-react"
 import Image from "next/image"
 import Logo from "@/assets/logo.svg"
-import { UserButton } from "@clerk/nextjs"
-import { dark } from "@clerk/themes"
 import Link from "next/link"
 import DashboardNavbarSearch from "./search"
+import { User } from "@/lib/types"
+import UserButton from "../ui/userButton"
 
-const Navbar = () => {
+const Navbar = ({userData}: {userData: User}) => {
     return (
         <div className="h-14 px-2 w-full border-b border-border flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -17,9 +16,7 @@ const Navbar = () => {
             </div>
             <div className="flex items-center space-x-4">
                 <DashboardNavbarSearch />
-                <UserButton appearance={{
-                    baseTheme: dark
-                }} />
+                <UserButton userData={userData} />
             </div>
         </div>
     )
