@@ -30,6 +30,21 @@ export default {
 
 		const db = drizzle(env.DB, {schema});
 
+		if (path === "/api/virtualbox/create" && method === "POST") {
+			const initSchema = z.object({
+				type: z.enum(["react", "node"]),
+				name: z.string(),
+				userId: z.string()
+			})
+
+			const body = await request.json()
+			const {type, name, userId} = initSchema.parse(body)
+
+			const vb = await db.insert(schema.virtualbox).values({type, name, userId}).returning().get()
+
+			console.log("vb:", vb)
+		}
+
 		if (path === "/api/user") {
 			if (method === "GET") {
 				const params = url.searchParams;
