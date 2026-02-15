@@ -1,9 +1,9 @@
 import Image from "next/image"
 import Logo from "@/assets/logo.svg"
 import Link from "next/link"
-import DashboardNavbarSearch from "./search"
 import { User } from "@/lib/types"
-import UserButton from "../ui/userButton"
+import UserButton from "../../ui/userButton"
+import { Pencil } from "lucide-react"
 
 const Navbar = ({userData}: {userData: User}) => {
     return (
@@ -12,12 +12,14 @@ const Navbar = ({userData}: {userData: User}) => {
                 <Link href={"/"} className="ring-offset-2 ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none rounded-sm">
                     <Image src={Logo} alt="Logo" width={36} height={36} />
                 </Link>
-                <div className="text-sm font-medium flex items-center">VirtualBox</div>
+                <div className="text-sm font-medium flex items-center">
+                    My React Project {" "}
+                    <div className="h-7 w-7 ml-2 flex items-center justify-center">
+                        <Pencil className="w-4 h-4" />
+                    </div>
+                </div>
             </div>
-            <div className="flex items-center space-x-4">
-                <DashboardNavbarSearch />
                 <UserButton userData={userData} />
-            </div>
         </div>
     )
 }

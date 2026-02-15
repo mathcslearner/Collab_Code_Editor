@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react"
 import { useEffect, useState } from "react"
-import { Input } from "../ui/input"
+import { Input } from "../../ui/input"
 import { useRouter } from "next/navigation"
 
 const DashboardNavbarSearch = () => {

@@ -1,5 +1,5 @@
 import Dashboard from "@/components/dashboard"
-import Navbar from "@/components/navbar"
+import Navbar from "@/components/dashboard/navbar"
 import { User, VirtualBox } from "@/lib/types"
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
