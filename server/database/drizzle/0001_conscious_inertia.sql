@@ -1,0 +1,1 @@
+ALTER TABLE virtualbox ADD `bucket` text;

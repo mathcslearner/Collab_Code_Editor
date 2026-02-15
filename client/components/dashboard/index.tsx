@@ -5,10 +5,11 @@ import CustomButton from "../ui/customButton"
 import { Button } from "../ui/button"
 import { useState } from "react"
 import ProjectCard from "./projectCard"
+import { VirtualBox } from "@/lib/types"
 
 type TScreen = "projects" | "shared" | "settings" | "search";
 
-const Dashboard = () => {
+const Dashboard = ({virtualboxes}: {virtualboxes: VirtualBox[]}) => {
     const [screen, setScreen] = useState<TScreen>("projects");
 
     const activeScreen = (s: TScreen) => {
@@ -52,19 +53,21 @@ const Dashboard = () => {
                 </div>
             </div>
             <div className="grow grid lg:grid-cols-4 xl:grid-cols-5 space-y-0.5 p-4">
-                <ProjectCard>
-                    <div className="font-medium flex items-center whitespace-nowrap w-full text-ellipsis overflow-hidden">
-                        React Project 1
-                    </div>
-                    <div className="flex flex-col text-muted-foreground space-y-0.5 text-sm">
-                        <div className="flex items-center">
-                            <Globe className="w-3 h-3 mr-2" /> Public
+                {virtualboxes.map((virtualbox) => (
+                    <ProjectCard key={virtualbox.id}>
+                        <div className="font-medium flex items-center whitespace-nowrap w-full text-ellipsis overflow-hidden">
+                            {virtualbox.name}
                         </div>
-                        <div className="flex items-center">
-                            <Globe className="w-3 h-3 mr-2" /> 3d ago
+                        <div className="flex flex-col text-muted-foreground space-y-0.5 text-sm">
+                            <div className="flex items-center">
+                                <Globe className="w-3 h-3 mr-2" /> Public
+                            </div>
+                            <div className="flex items-center">
+                                <Globe className="w-3 h-3 mr-2" /> 3d ago
+                            </div>
                         </div>
-                    </div>
-                </ProjectCard>
+                    </ProjectCard>
+                ))}
             </div>
         </div>
     )
