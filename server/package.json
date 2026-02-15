@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "drizzle-kit": "^0.31.9"
+  },
+  "dependencies": {
+    "cloudflare": "^5.2.0"
   }
 }
