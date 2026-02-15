@@ -12,6 +12,13 @@
 	},
 	"compatibility_flags": [
 		"nodejs_compat"
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "d1-virtualbox",
+			"database_id": "8d94aade-97a1-4e35-bd54-876595ef81e2"
+		}
 	]
 	/**
 	 * Smart Placement
