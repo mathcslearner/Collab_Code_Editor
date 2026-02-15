@@ -1,11 +1,12 @@
 "use client"
 
-import { Code2, FolderDot, Globe, HelpCircle, Plus, Settings, Users } from "lucide-react"
+import { Code2, FolderDot, HelpCircle, Plus, Settings, Users } from "lucide-react"
 import CustomButton from "../ui/customButton"
 import { Button } from "../ui/button"
 import { useState } from "react"
-import ProjectCard from "./projectCard"
 import { VirtualBox } from "@/lib/types"
+import DashboardSharedWithMe from "./shared"
+import DashboardProjects from "./projects"
 
 type TScreen = "projects" | "shared" | "settings" | "search";
 
@@ -34,7 +35,7 @@ const Dashboard = ({virtualboxes}: {virtualboxes: VirtualBox[]}) => {
                     </Button>
                     <Button variant={"ghost"} onClick={() => setScreen("shared")} className={activeScreen("shared")}>
                         <Users className="w-4 h-4 mr-2" />
-                        Shared Rooms
+                        Shared With Me
                     </Button>
                     <Button variant={"ghost"} onClick={() => setScreen("settings")} className={activeScreen("settings")}>
                         <Settings className="w-4 h-4 mr-2" />
@@ -52,23 +53,9 @@ const Dashboard = ({virtualboxes}: {virtualboxes: VirtualBox[]}) => {
                     </Button>
                 </div>
             </div>
-            <div className="grow grid lg:grid-cols-4 xl:grid-cols-5 space-y-0.5 p-4">
-                {virtualboxes.map((virtualbox) => (
-                    <ProjectCard key={virtualbox.id}>
-                        <div className="font-medium flex items-center whitespace-nowrap w-full text-ellipsis overflow-hidden">
-                            {virtualbox.name}
-                        </div>
-                        <div className="flex flex-col text-muted-foreground space-y-0.5 text-sm">
-                            <div className="flex items-center">
-                                <Globe className="w-3 h-3 mr-2" /> Public
-                            </div>
-                            <div className="flex items-center">
-                                <Globe className="w-3 h-3 mr-2" /> 3d ago
-                            </div>
-                        </div>
-                    </ProjectCard>
-                ))}
-            </div>
+            {screen === "projects" ? (
+                <DashboardProjects virtualboxes={virtualboxes}/>
+            ): screen === "shared" ? <DashboardSharedWithMe virtualboxes={virtualboxes} /> : screen === "settings" ? null : null}
         </div>
     )
 }
