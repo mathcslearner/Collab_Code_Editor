@@ -49,6 +49,10 @@ const newProject = ({open, setOpen}: {open: boolean, setOpen: (open:boolean) => 
         }
     })
 
+    const onSubmit = (values: z.infer<typeof formSchema>) => {
+        const virtualboxData = {type: selected, ...values}
+    }
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent>

@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { TFolder } from "./types"
+import { TFile, TFolder } from "./types"
 import { getIconForFolder, getIconForOpenFolder } from "vscode-icons-js"
 import Image from "next/image"
 import SidebarFile from "./file"
 
-const SidebarFolder = ({data}: {data: TFolder}) => {
+const SidebarFolder = ({data, selectFile}: {data: TFolder, selectFile: (file: TFile) => void}) => {
     const [isOpen, setIsOpen] = useState(false)
     const folder = isOpen ? getIconForOpenFolder(data.name) : getIconForFolder(data.name);
 
@@ -21,9 +21,9 @@ const SidebarFolder = ({data}: {data: TFolder}) => {
                 <div className="w-px bg-border mx-2 h-full"></div>
                 <div className="flex flex-col grow">
                     {data.children.map((child) => child.type === "file" ? (
-                        <SidebarFile key={child.id} data={child} />
+                        <SidebarFile key={child.id} data={child} selectFile={selectFile}/>
                     ) : (
-                        <SidebarFolder key={child.id} data={child} />
+                        <SidebarFolder key={child.id} data={child} selectFile={selectFile}/>
                     ))}
                 </div>
             </div>

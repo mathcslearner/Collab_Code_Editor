@@ -20,6 +20,7 @@ import * as schema from "./schema"
 
 export interface Env {
 	DB: D1Database;
+	STORAGE: any;
 }
 
 export default {
@@ -48,11 +49,21 @@ export default {
 
 			console.log("vb:", vb)
 
-			await fetch("https://storage.mzli.workers.dev/api/init", {
+			// await fetch("https://storage.mzli.workers.dev/api/init", {
+			//	method: "POST",
+			//	body: JSON.stringify({virtualboxId: vb.id, type}),
+			//	headers: {"Content-Type": "application/json"}
+			// })
+
+			const initStorageRequest = new Request(`https://storage.mzli.workers.dev/api/init`, {
 				method: "POST",
 				body: JSON.stringify({virtualboxId: vb.id, type}),
-				headers: {"Content-Type": "application/json"}
+				headers: {
+					"Content-Type": "application/json"
+				}
 			})
+
+			await env.STORAGE.fetch(initStorageRequest)
 
 			return success
 		} else if (path === "/api/user") {

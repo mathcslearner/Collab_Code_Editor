@@ -12,3 +12,20 @@ export type VirtualBox = {
     bucket: string | null 
     userId: string
 }
+
+export type R2Files = {
+    objects: R2FileData[]
+    truncated: boolean
+    delimitedPrefixes: any[]
+}
+
+export type R2FileData = {
+    storageClass: string
+    uploaded: string
+    checkSums: any
+    httpEtag: string
+    etag: string
+    size: number
+    version: string
+    key: string
+}
