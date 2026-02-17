@@ -24,6 +24,10 @@ export interface Env {
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
+		const success = new Response("Success", {status: 200})
+		const notFound = new Response("Not Found", {status: 404})
+		const methodNotAllowed = new Response("Method Not Allowed")
+
 		const url = new URL(request.url);
 		const path = url.pathname;
 		const method = request.method;
@@ -43,9 +47,15 @@ export default {
 			const vb = await db.insert(schema.virtualbox).values({type, name, userId}).returning().get()
 
 			console.log("vb:", vb)
-		}
 
-		if (path === "/api/user") {
+			await fetch("https://storage.mzli.workers.dev/api/init", {
+				method: "POST",
+				body: JSON.stringify({virtualboxId: vb.id, type}),
+				headers: {"Content-Type": "application/json"}
+			})
+
+			return success
+		} else if (path === "/api/user") {
 			if (method === "GET") {
 				const params = url.searchParams;
 

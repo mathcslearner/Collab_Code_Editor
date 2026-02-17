@@ -11,8 +11,57 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
+import { z } from "zod"
+import startercode from "./startercode";
+
+export interface Env{
+	R2: R2Bucket;
+}
+
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
+		const success = new Response("Success", {status: 200})
+		const notFound = new Response("Not Found", {status: 404})
+		const methodNotAllowed = new Response("Method Not Allowed")
+		const invalidRequest = new Response("Invalid Request", {status: 400})
+
+		const url = new URL(request.url)
+		const path = url.pathname
+		const method = request.method
+
+		if (path === "/api") {
+			if (method === "GET") {
+				const params = url.searchParams
+				const virtualboxId = params.get("virtualboxId")
+
+				if (!virtualboxId) {
+					return invalidRequest
+				}
+
+				const res = await env.R2.list({prefix: `projects/${virtualboxId}`})
+				return new Response(JSON.stringify(res), {status: 200})
+			} else if (method === "POST") {
+				return new Response("Hello World")
+			} else return methodNotAllowed
+		} else if (path === "/api/init" && method === "POST") {
+			const initSchema = z.object({
+				virtualboxId: z.string(),
+				type: z.enum(["react", "node"])
+			})
+
+			const body = await request.json()
+
+			const {virtualboxId, type}= initSchema.parse(body)
+
+			await Promise.all(
+				startercode[type].map(async (file) => {
+					await env.R2.put(`projects/${virtualboxId}/${file.name}`, file.body)
+				})
+			)
+
+			return success
+		} else {
+			return notFound
+		}
 	},
 } satisfies ExportedHandler<Env>;

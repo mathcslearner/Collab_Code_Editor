@@ -15,6 +15,13 @@
       "when": 1771183808798,
       "tag": "0001_conscious_inertia",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1771286825112,
+      "tag": "0002_regular_swordsman",
+      "breakpoints": true
     }
   ]
 }
