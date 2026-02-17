@@ -33,13 +33,31 @@ export default {
 			if (method === "GET") {
 				const params = url.searchParams
 				const virtualboxId = params.get("virtualboxId")
+				const fileId = params.get("fileId")
+
+				if (virtualboxId) {
+					const res = await env.R2.list({prefix: `projects/${virtualboxId}`})
+					return new Response(JSON.stringify(res), {status: 200})
+				} else if (fileId) {
+					const obj = await env.R2.get(fileId)
+					if (obj === null) {
+						return new Response(`${fileId} not found`, {status: 404})
+					}
+					const headers = new Headers()
+					headers.set("etag", obj.httpEtag)
+					obj.writeHttpMetadata(headers)
+
+					const text = await obj.text()
+
+					return new Response(text, {
+						headers
+					})
+				} else return invalidRequest
 
 				if (!virtualboxId) {
 					return invalidRequest
 				}
 
-				const res = await env.R2.list({prefix: `projects/${virtualboxId}`})
-				return new Response(JSON.stringify(res), {status: 200})
 			} else if (method === "POST") {
 				return new Response("Hello World")
 			} else return methodNotAllowed

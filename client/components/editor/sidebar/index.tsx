@@ -1,6 +1,6 @@
 "use client"
 
-import { FilePlus, FolderPlus, Search } from "lucide-react"
+import { FilePlus, FolderPlus, Loader2, Search } from "lucide-react"
 import SidebarFolder from "./folder"
 import SidebarFile from "./file"
 import { TFile, TFolder } from "./types"
@@ -23,11 +23,17 @@ const Sidebar = ({files, selectFile}: {files: (TFile | TFolder)[]; selectFile: (
                 </div>
             </div>
             <div className="w-full mt-1 flex flex-col">
-                {files.map((child) => 
-                    child.type === "file" ? (
-                        <SidebarFile key={child.id} data={child} selectFile={selectFile}/> 
-                    ) : ( 
-                        <SidebarFolder key={child.id} data={child} selectFile={selectFile}/>
+                {files.length === 0 ? (
+                    <div className="flex justify-center w-full">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                    </div>
+                ) : (
+                    files.map((child) => 
+                        child.type === "file" ? (
+                            <SidebarFile key={child.id} data={child} selectFile={selectFile}/> 
+                        ) : ( 
+                            <SidebarFolder key={child.id} data={child} selectFile={selectFile}/>
+                        )
                     )
                 )}
             </div>

@@ -4,20 +4,46 @@ import { X } from "lucide-react"
 import { Button } from "../ui/button"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../ui/resizable"
 import { Editor, OnMount } from "@monaco-editor/react"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import monaco from "monaco-editor"
 import Sidebar from "./sidebar"
 import { useClerk } from "@clerk/nextjs"
 import Tab from "../ui/tab"
 import { TFile, TFolder } from "./sidebar/types"
+import { io } from "socket.io-client"
 
-const CodeEditor = ({files}: {files: (TFile | TFolder)[]}) => {
+const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: string}) => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
 
     const clerk = useClerk();
 
     const [tabs, setTabs] = useState<TFile[]>([])
     const [activeId, setActiveId] = useState<string | null>(null)
+    const [files, setFiles] = useState<(TFile|TFolder)[]>([])
+
+    const socket = io(
+        `http://localhost:4000?userId=${userId}&virtualboxId=${virtualboxId}`
+    )
+
+    useEffect(() => {
+        socket.connect()
+
+        return () => {
+            socket.disconnect()
+        }
+    }, [])
+
+    useEffect(() => {
+        const onLoadedEvent = (files: (TFolder | TFile)[]) => {
+            setFiles(files);
+        }
+
+        socket.on("loaded", onLoadedEvent)
+
+        return () => {
+            socket.off("loaded", onLoadedEvent)
+        }
+    }, [])
 
     const selectFile = (tab: TFile) => {
         setTabs((prev) => {
@@ -45,6 +71,10 @@ const CodeEditor = ({files}: {files: (TFile | TFolder)[]}) => {
 
         setTabs((prev) => prev.filter((t => t.id !== tab.id)))
     }
+
+    useEffect(() => {
+        setFiles(files)
+    }, [files])
 
     return (
         <>

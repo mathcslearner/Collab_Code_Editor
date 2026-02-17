@@ -1,7 +1,8 @@
 import express, {Express} from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-
+import getVirtualboxFiles from "./getVirtualboxFiles";
+import {z} from "zod"
 
 const app: Express = express();
 
@@ -14,32 +15,63 @@ const io = new Server(httpServer, {
     }
 })
 
+const handshakeSchema = z.object({
+    userId: z.string(),
+    virtualboxId: z.string(),
+    type: z.enum(["node", "react"]),
+    EIO: z.string(),
+    transport: z.string()
+})
+
 io.use(async (socket, next) => {
     const q = socket.handshake.query;
 
     console.log("middleware");
     console.log(q);
 
-    if (!q.userId || !q.virtualboxId) {
+    const parseQuery = handshakeSchema.safeParse(q);
+
+    if (!parseQuery.success) {
         next(new Error("Invalid request"));
+        return;
     }
+
+    const {virtualboxId, userId, type} = parseQuery.data
 
     const dbUser = await fetch(`https://database.mzli.workers.dev/api/user?id=${q.userId}`);
     const dbUserJSON = await dbUser.json()
 
-    if (!dbUserJSON || !dbUserJSON.virtualbox.includes(q.virtualboxId)) {
+    if (!dbUserJSON) {
+        next(new Error("DB error"));
+        return;
+    }
+
+    const virtualbox = dbUserJSON.virtualbox.find((v: any) => v.id === virtualboxId)
+
+    if (!virtualbox) {
         next(new Error("Invalid credentials"))
+        return
+    }
+
+    socket.data = {
+        id: virtualboxId,
+        type,
+        userId
     }
 
     next();
 })
 
 io.on("connection", async (socket) => {
-    console.log("connection")
+    const data = socket.data as {
+        userId: string
+        id: string
+        type: "node" | "react"
+    }
 
-    const userId = socket.handshake.query.userId
+    const virtualboxFiles = await getVirtualboxFiles(data.id)
 
-    console.log(userId)
+    socket.emit("loaded", virtualboxFiles.files)
 })
 
 httpServer.listen(port, () => {
