@@ -64,6 +64,12 @@ io.on("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () {
     const data = socket.data;
     const virtualboxFiles = yield (0, getVirtualboxFiles_1.default)(data.id);
     socket.emit("loaded", virtualboxFiles.files);
+    socket.on("getFile", (fileId, callback) => {
+        const file = virtualboxFiles.fileData.find((f) => f.id === fileId);
+        if (!file)
+            return;
+        callback(file.data);
+    });
 }));
 httpServer.listen(port, () => {
     console.log(`Server running on port ${port}`);

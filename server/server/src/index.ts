@@ -72,6 +72,13 @@ io.on("connection", async (socket) => {
     const virtualboxFiles = await getVirtualboxFiles(data.id)
 
     socket.emit("loaded", virtualboxFiles.files)
+
+    socket.on("getFile", (fileId: string, callback) => {
+        const file = virtualboxFiles.fileData.find((f) => f.id === fileId)
+        if (!file) return
+
+        callback(file.data)
+    })
 })
 
 httpServer.listen(port, () => {
