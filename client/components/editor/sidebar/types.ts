@@ -10,3 +10,7 @@ export type TFile = {
     type: "file",
     name: string
 }
+
+export type TTab = TFile & {
+    saved: boolean
+}

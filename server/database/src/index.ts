@@ -66,6 +66,18 @@ export default {
 			await env.STORAGE.fetch(initStorageRequest)
 
 			return success
+		} else if (path === "/api/virtualbox" && method === "GET") {
+			const params = url.searchParams
+			if (params.has("id")) {
+				const id = params.get("id") as string
+				const res = await db.query.virtualbox.findFirst({
+					where: (virtualbox, {eq}) => eq(virtualbox.id, id)
+				})
+				return json(res ?? {})
+			} else {
+				const res = await db.select().from(schema.virtualbox).all()
+				return json(res ?? {})
+			}
 		} else if (path === "/api/user") {
 			if (method === "GET") {
 				const params = url.searchParams;

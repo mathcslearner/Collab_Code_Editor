@@ -1,6 +1,6 @@
 "use client"
 
-import { X } from "lucide-react"
+import { FileJson, X } from "lucide-react"
 import { Button } from "../ui/button"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../ui/resizable"
 import { Editor, OnMount } from "@monaco-editor/react"
@@ -9,15 +9,16 @@ import monaco from "monaco-editor"
 import Sidebar from "./sidebar"
 import { useClerk } from "@clerk/nextjs"
 import Tab from "../ui/tab"
-import { TFile, TFolder } from "./sidebar/types"
+import { TFile, TFolder, TTab } from "./sidebar/types"
 import { io } from "socket.io-client"
+import processFileType from "@/lib/utils"
 
 const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: string}) => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
 
     const clerk = useClerk();
 
-    const [tabs, setTabs] = useState<TFile[]>([])
+    const [tabs, setTabs] = useState<TTab[]>([])
     const [activeId, setActiveId] = useState<string | null>(null)
     const [files, setFiles] = useState<(TFile|TFolder)[]>([])
     const [editorLanguage, setEditorLanguage] = useState<string|undefined>(undefined)
@@ -47,7 +48,7 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
         }
     }, [])
 
-    const selectFile = (tab: TFile) => {
+    const selectFile = (tab: TTab) => {
         setTabs((prev) => {
             const exists = prev.find((t) => t.id === tab.id)
 
@@ -63,7 +64,7 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
             setActiveFile(response)
         })
 
-        setEditorLanguage(tab.name.split(".").pop() ?? "plaintext")
+        setEditorLanguage(processFileType(tab.name))
 
         setActiveId(tab.id)
     }
@@ -90,21 +91,42 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
         editorRef.current = editor
     }
 
+    const handleRename = (id: string, newName: string, oldName: string, type:"file" | "folder") => {
+        if (newName === oldName || newName.includes("/") || newName.includes("\\") || newName.includes(" ") || (type === "file" && !newName.includes(".")) || (type ==="folder" && newName.includes("."))) {
+            return false
+        }
+
+        socket.emit("renameFile", id, newName)
+
+        setTabs((prev) => 
+            prev.map((tab) => (tab.id === id ? {...tab, name: newName} : tab))
+        )
+
+        return true
+    }
+
     return (
         <>
-        <Sidebar files={files} selectFile={selectFile}/>
+        <Sidebar files={files} selectFile={selectFile} handleRename={handleRename}/>
         <ResizablePanelGroup orientation="horizontal">
             <ResizablePanel minSize={30} defaultSize={60} className="flex flex-col p-2">
                 <div className="h-10 w-full flex gap-2">
                     {tabs.map((tab) => (
-                        <Tab key={tab.id} selected={activeId === tab.id} onClick={() => selectFile(tab)} onClose={() => closeTab(tab)}>
+                        <Tab key={tab.id} saved={tab.saved} selected={activeId === tab.id} onClick={() => selectFile(tab)} onClose={() => closeTab(tab)}>
                             {tab.name}
                         </Tab>
                     ))}
                 </div>
                 <div className="grow w-full overflow-hidden rounded-lg relative">
-                    {clerk.loaded ? (
-                        <Editor height={"100%"} defaultLanguage="typescript" theme="vs-dark" onMount={handleEditorMount} language={editorLanguage}
+                    {activeId === null ? (
+                        <>
+                            <div className="flex items-center w-full h-full justify-center text-xl font-medium text-secondary select-none">
+                                <FileJson className="w-6 h-6 mr-3" />
+                                No File Selected
+                            </div>
+                        </>
+                    ) : clerk.loaded ? (
+                        <Editor height={"100%"} defaultLanguage="typescript" theme="vs-dark" onMount={handleEditorMount} onChange={(value) => {setTabs((prev) => prev.map((tab) => tab.id === activeId ? {...tab, saved: false} : tab))}} language={editorLanguage}
                         options={{
                             minimap: {
                                 enabled: false

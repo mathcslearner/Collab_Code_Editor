@@ -3,9 +3,9 @@
 import { FilePlus, FolderPlus, Loader2, Search } from "lucide-react"
 import SidebarFolder from "./folder"
 import SidebarFile from "./file"
-import { TFile, TFolder } from "./types"
+import { TFile, TFolder, TTab } from "./types"
 
-const Sidebar = ({files, selectFile}: {files: (TFile | TFolder)[]; selectFile: (tab: TFile) => void}) => {
+const Sidebar = ({files, selectFile, handleRename}: {files: (TFile | TFolder)[]; selectFile: (tab: TTab) => void; handleRename: (id: string, newName: string, oldName: string, type: "file" | "folder") => boolean}) => {
     return(
         <div className="h-full w-56 flex flex-col items-start p-2">
             <div className="flex  w-full items-center justify-between h-8 mb-1">
@@ -30,9 +30,9 @@ const Sidebar = ({files, selectFile}: {files: (TFile | TFolder)[]; selectFile: (
                 ) : (
                     files.map((child) => 
                         child.type === "file" ? (
-                            <SidebarFile key={child.id} data={child} selectFile={selectFile}/> 
+                            <SidebarFile key={child.id} data={child} selectFile={selectFile} handleRename={handleRename}/> 
                         ) : ( 
-                            <SidebarFolder key={child.id} data={child} selectFile={selectFile}/>
+                            <SidebarFolder key={child.id} data={child} selectFile={selectFile} handleRename={handleRename}/>
                         )
                     )
                 )}

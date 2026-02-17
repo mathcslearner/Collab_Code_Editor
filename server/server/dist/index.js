@@ -17,6 +17,7 @@ const http_1 = require("http");
 const socket_io_1 = require("socket.io");
 const getVirtualboxFiles_1 = __importDefault(require("./getVirtualboxFiles"));
 const zod_1 = require("zod");
+const utils_1 = require("./utils");
 const app = (0, express_1.default)();
 const port = process.env.PORT || 4000;
 const httpServer = (0, http_1.createServer)(app);
@@ -70,6 +71,13 @@ io.on("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () {
             return;
         callback(file.data);
     });
+    socket.on("renameFile", (fileId, newName) => __awaiter(void 0, void 0, void 0, function* () {
+        const file = virtualboxFiles.fileData.find((f) => f.id === fileId);
+        if (!file)
+            return;
+        yield (0, utils_1.renameFile)(fileId, newName, file.data);
+        file.id = newName;
+    }));
 }));
 httpServer.listen(port, () => {
     console.log(`Server running on port ${port}`);
