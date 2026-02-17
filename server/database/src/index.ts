@@ -35,48 +35,42 @@ export default {
 
 		const db = drizzle(env.DB, {schema});
 
-		if (path === "/api/virtualbox/create" && method === "POST") {
-			const initSchema = z.object({
-				type: z.enum(["react", "node"]),
-				name: z.string(),
-				userId: z.string()
-			})
-
-			const body = await request.json()
-			const {type, name, userId} = initSchema.parse(body)
-
-			const vb = await db.insert(schema.virtualbox).values({type, name, userId}).returning().get()
-
-			console.log("vb:", vb)
-
-			// await fetch("https://storage.mzli.workers.dev/api/init", {
-			//	method: "POST",
-			//	body: JSON.stringify({virtualboxId: vb.id, type}),
-			//	headers: {"Content-Type": "application/json"}
-			// })
-
-			const initStorageRequest = new Request(`https://storage.mzli.workers.dev/api/init`, {
-				method: "POST",
-				body: JSON.stringify({virtualboxId: vb.id, type}),
-				headers: {
-					"Content-Type": "application/json"
+		if (path === "/api/virtualbox") {
+			if (method === "GET") {
+				const params = url.searchParams
+				if (params.has("id")) {
+					const id = params.get("id") as string
+					const res = await db.query.virtualbox.findFirst({
+						where: (virtualbox, {eq}) => eq(virtualbox.id, id)
+					})
+					return json(res ?? {})
+				} else {
+					const res = await db.select().from(schema.virtualbox).all()
+					return json(res ?? {})
 				}
-			})
-
-			await env.STORAGE.fetch(initStorageRequest)
-
-			return success
-		} else if (path === "/api/virtualbox" && method === "GET") {
-			const params = url.searchParams
-			if (params.has("id")) {
-				const id = params.get("id") as string
-				const res = await db.query.virtualbox.findFirst({
-					where: (virtualbox, {eq}) => eq(virtualbox.id, id)
+			} else if (method === "POST") {
+				const initSchema = z.object({
+					type: z.enum(["react", "node"]),
+					name: z.string(),
+					userId: z.string(),
+					visibility: z.enum(["public", "private"])
 				})
-				return json(res ?? {})
-			} else {
-				const res = await db.select().from(schema.virtualbox).all()
-				return json(res ?? {})
+
+				const body = await request.json()
+				const {type, name, userId, visibility} = initSchema.parse(body)
+
+				const vb = await db.insert(schema.virtualbox).values({type, name, userId, visibility}).returning().get()
+
+				const initStorageRequest = new Request(`https://storage.mzli.workers.dev/api/init`, {
+					method: "POST",
+					body: JSON.stringify({virtualboxId: vb.id, type}),
+					headers: {
+						"Content-Type": "application/json"
+					}
+				})
+
+				await env.STORAGE.fetch(initStorageRequest)
+				return new Response(vb.id, {status: 200})
 			}
 		} else if (path === "/api/user") {
 			if (method === "GET") {

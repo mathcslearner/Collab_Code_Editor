@@ -18,6 +18,7 @@ export const virtualbox = sqliteTable("virtualbox", {
     id: text("id").$defaultFn(() => createId()).primaryKey().unique(),
     name: text("name").notNull(),
     type: text("text", {enum: ["react", "node"]}).notNull(),
+    visibility: text("visibility", {enum: ["public", "private"]}),
     userId: text("user_id").notNull().references(() => user.id)
 })
 

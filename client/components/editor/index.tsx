@@ -12,6 +12,7 @@ import Tab from "../ui/tab"
 import { TFile, TFolder, TTab } from "./sidebar/types"
 import { io } from "socket.io-client"
 import processFileType from "@/lib/utils"
+import { toast } from "sonner"
 
 const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: string}) => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
@@ -92,7 +93,12 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
     }
 
     const handleRename = (id: string, newName: string, oldName: string, type:"file" | "folder") => {
-        if (newName === oldName || newName.includes("/") || newName.includes("\\") || newName.includes(" ") || (type === "file" && !newName.includes(".")) || (type ==="folder" && newName.includes("."))) {
+        if (newName === oldName) {
+            return false
+        }
+
+        if (newName.includes("/") || newName.includes("\\") || newName.includes(" ") || (type === "file" && !newName.includes(".")) || (type ==="folder" && newName.includes("."))) {
+            toast.error("Invalid file name")
             return false
         }
 

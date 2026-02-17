@@ -9,7 +9,7 @@ export type VirtualBox = {
     id: string 
     name: string 
     type: "react" | "node"
-    bucket: string | null 
+    visibility: "public" | "private" 
     userId: string
 }
 

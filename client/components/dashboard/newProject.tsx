@@ -10,6 +10,10 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { Input } from "../ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
 import CustomButton from "../ui/customButton"
+import { Loader2 } from "lucide-react"
+import { useUser } from "@clerk/nextjs"
+import createVirtualbox from "@/lib/actions"
+import { useRouter } from "next/navigation"
 
 type TOptions = "react" | "node"
 
@@ -40,6 +44,10 @@ const formSchema = z.object({
 
 const newProject = ({open, setOpen}: {open: boolean, setOpen: (open:boolean) => void}) => {
     const [selected, setSelected] = useState<TOptions>("react")
+    const [loading, setLoading] = useState(false)
+
+    const user = useUser()
+    const router = useRouter()
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -49,8 +57,14 @@ const newProject = ({open, setOpen}: {open: boolean, setOpen: (open:boolean) => 
         }
     })
 
-    const onSubmit = (values: z.infer<typeof formSchema>) => {
-        const virtualboxData = {type: selected, ...values}
+    const onSubmit = async (values: z.infer<typeof formSchema>) => {
+        if (!user.isSignedIn) return
+
+        const virtualboxData = {type: selected, userId: user.user.id, ...values}
+        setLoading(true)
+
+        const id = await createVirtualbox(virtualboxData)
+        router.push((`/code/${id}`))
     }
 
     return (
@@ -75,7 +89,7 @@ const newProject = ({open, setOpen}: {open: boolean, setOpen: (open:boolean) => 
                     ))}
                 </div>
                 <Form {...form}>
-                    <form>
+                    <form onSubmit={form.handleSubmit(onSubmit)}>
                         <FormField control={form.control} name="name" render={({field}) => (
                             <FormItem className="mb-4">
                                 <FormLabel>Name</FormLabel>
@@ -101,8 +115,14 @@ const newProject = ({open, setOpen}: {open: boolean, setOpen: (open:boolean) => 
                                 <FormMessage />
                             </FormItem>
                         )} />
-                        <CustomButton type="submit" className="w-full">
-                            Submit
+                        <CustomButton disabled={loading} type="submit" className="w-full">
+                            {loading ? (
+                                <>
+                                    <Loader2 className="animate-spin mr-2 h-4 w-4" /> Loading...
+                                </> 
+                            ) : (
+                                "Submit"
+                            )}
                         </CustomButton>
                     </form>
                 </Form>
