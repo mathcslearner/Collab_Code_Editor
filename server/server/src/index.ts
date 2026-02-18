@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import getVirtualboxFiles from "./getVirtualboxFiles";
 import {z} from "zod"
 import { renameFile, saveFile } from "./utils";
+import { Pty } from "./terminal";
 
 const app: Express = express();
 
@@ -15,6 +16,8 @@ const io = new Server(httpServer, {
         origin: "*",
     }
 })
+
+const terminals: {[id: string]: Pty} = {}
 
 const handshakeSchema = z.object({
     userId: z.string(),
@@ -99,6 +102,19 @@ io.on("connection", async (socket) => {
         file.id = newName
         await renameFile(fileId, newName, file.data)
     })
+
+    socket.on("createTerminal", ({id}: {id: string}) => {
+        terminals[id] = new Pty(socket, id)
+    })
+
+    socket.on("terminalData", ({id, data}: {id: string, data: string}) => {
+        if (!terminals[id]) return
+
+        terminals[id].write(data)
+    })
+
+    socket.on("disconnect", () => {})
+
 })
 
 httpServer.listen(port, () => {

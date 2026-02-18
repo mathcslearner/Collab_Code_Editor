@@ -4,19 +4,23 @@ import { FilePlus, FolderPlus, Loader2, Search } from "lucide-react"
 import SidebarFolder from "./folder"
 import SidebarFile from "./file"
 import { TFile, TFolder, TTab } from "./types"
+import { useState } from "react"
+import New from "./new"
 
 const Sidebar = ({files, selectFile, handleRename}: {files: (TFile | TFolder)[]; selectFile: (tab: TTab) => void; handleRename: (id: string, newName: string, oldName: string, type: "file" | "folder") => boolean}) => {
+    const [creatingNew, setCreatingNew] = useState<"file" | "folder" | null>(null)
+
     return(
         <div className="h-full w-56 flex flex-col items-start p-2">
             <div className="flex  w-full items-center justify-between h-8 mb-1">
                 <div className="text-muted-foreground">Explorer</div>
                 <div className="flex space-x-1">
-                    <div className="h-6 w-6 text-muted-foreground ml-0.5 flex items-center justify-center translate-x-1 transition-colors bg-transparent hover:bg-muted-foreground/25 cursor-pointer rounded-sm">
+                    <button onClick={() => setCreatingNew("file")} className="disabled:opacity-50 disabled:hover:bg-background h-6 w-6 text-muted-foreground ml-0.5 flex items-center justify-center translate-x-1 bg-transparent hover:bg-muted-foreground/25 cursor-pointer rounded-sm transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                         <FilePlus className="h-4 w-4" />
-                    </div>
-                    <div className="h-6 w-6 text-muted-foreground ml-0.5 flex items-center justify-center translate-x-1 transition-colors bg-transparent hover:bg-muted-foreground/25 cursor-pointer rounded-sm">
+                    </button>
+                    <button onClick={() => setCreatingNew("folder")} className="disabled:opacity-50 disabled:hover:bg-background h-6 w-6 text-muted-foreground ml-0.5 flex items-center justify-center translate-x-1 bg-transparent hover:bg-muted-foreground/25 cursor-pointer rounded-sm transition-all focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring">
                         <FolderPlus className="h-4 w-4" />
-                    </div>
+                    </button>
                     <div className="h-6 w-6 text-muted-foreground ml-0.5 flex items-center justify-center translate-x-1 transition-colors bg-transparent hover:bg-muted-foreground/25 cursor-pointer rounded-sm">
                         <Search className="w-4 h-4" />
                     </div>
@@ -36,6 +40,9 @@ const Sidebar = ({files, selectFile, handleRename}: {files: (TFile | TFolder)[];
                         )
                     )
                 )}
+                {creatingNew !== null ? (
+                    <New type={creatingNew} stopEditing={() => setCreatingNew(null)} />
+                ) : null}
             </div>
         </div>
     )

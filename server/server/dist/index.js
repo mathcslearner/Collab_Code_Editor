@@ -18,6 +18,7 @@ const socket_io_1 = require("socket.io");
 const getVirtualboxFiles_1 = __importDefault(require("./getVirtualboxFiles"));
 const zod_1 = require("zod");
 const utils_1 = require("./utils");
+const terminal_1 = require("./terminal");
 const app = (0, express_1.default)();
 const port = process.env.PORT || 4000;
 const httpServer = (0, http_1.createServer)(app);
@@ -26,6 +27,7 @@ const io = new socket_io_1.Server(httpServer, {
         origin: "*",
     }
 });
+const terminals = {};
 const handshakeSchema = zod_1.z.object({
     userId: zod_1.z.string(),
     virtualboxId: zod_1.z.string(),
@@ -85,6 +87,15 @@ io.on("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () {
         file.id = newName;
         yield (0, utils_1.renameFile)(fileId, newName, file.data);
     }));
+    socket.on("createTerminal", ({ id }) => {
+        terminals[id] = new terminal_1.Pty(socket, id);
+    });
+    socket.on("terminalData", ({ id, data }) => {
+        if (!terminals[id])
+            return;
+        terminals[id].write(data);
+    });
+    socket.on("disconnect", () => { });
 }));
 httpServer.listen(port, () => {
     console.log(`Server running on port ${port}`);

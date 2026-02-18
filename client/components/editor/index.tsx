@@ -11,8 +11,9 @@ import { useClerk } from "@clerk/nextjs"
 import Tab from "../ui/tab"
 import { TFile, TFolder, TTab } from "./sidebar/types"
 import { io } from "socket.io-client"
-import processFileType from "@/lib/utils"
+import {processFileType} from "@/lib/utils"
 import { toast } from "sonner"
+import EditorTerminal from "./terminal"
 
 const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: string}) => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
@@ -42,10 +43,19 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
             setFiles(files);
         }
 
+        const onConnect = () => {}
+
+        const onDisconnect = () => {}
+
+        socket.on("connect", onConnect)
+        socket.on("disconnect", onDisconnect)
+
         socket.on("loaded", onLoadedEvent)
 
         return () => {
             socket.off("loaded", onLoadedEvent)
+            socket.off("disconnect", onDisconnect)
+            socket.off("connect", onConnect)
         }
     }, [])
 
@@ -183,7 +193,9 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
                             <Tab selected>Node.js</Tab>
                             <Tab>Console</Tab>
                         </div>
-                        <div className="w-full grow rounded-lg bg-foreground"></div>
+                        <div className="w-full relative grow rounded-lg bg-secondary">
+                            {socket ? <EditorTerminal socket={socket} /> : null}
+                        </div>
                     </ResizablePanel>
                 </ResizablePanelGroup>
             </ResizablePanel>

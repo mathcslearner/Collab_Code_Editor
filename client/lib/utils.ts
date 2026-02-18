@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-const processFileType = (file: string) => {
+export const processFileType = (file: string) => {
   const ending = file.split(".").pop()
 
   if (ending === "ts" || ending === "tsx") return "typescript"
@@ -16,4 +16,6 @@ const processFileType = (file: string) => {
   return "plaintext"
 }
 
-export default processFileType
+export const decodeTerminalResponse = (buffer: Buffer): string => {
+  return buffer.toString("utf-8")
+}
