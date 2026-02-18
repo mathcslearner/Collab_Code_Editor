@@ -2,9 +2,26 @@ import { VirtualBox } from "@/lib/types"
 import Image from "next/image"
 import ProjectCard from "./projectCard"
 import ProjectCardDropdown from "./projectCard/dropdown"
-import { Globe } from "lucide-react"
+import { Globe, Lock } from "lucide-react"
+import { toast } from "sonner"
+import {deleteVirtualbox, updateVirtualbox} from "@/lib/actions"
 
 const DashboardProjects = ({virtualboxes}: {virtualboxes: VirtualBox[]}) => {
+    const onDelete = async (virtualbox: VirtualBox) => {
+        toast(`Project ${virtualbox.name} deleted.`)
+        const res = await deleteVirtualbox(virtualbox.id)
+    }
+
+    const onVisibilityChange = async (virtualbox: VirtualBox) => {
+        const newVisibility = virtualbox.visibility === "public" ? "private" : "public"
+
+        toast(`Project ${virtualbox.name} is now ${newVisibility}`)
+        const res = await updateVirtualbox({
+            id: virtualbox.id,
+            visibility: newVisibility
+        })
+    }
+
     return (
         <div className="grow p-4 flex flex-col">
             <div className="text-xl font-medium mb-8">My Projects</div>
@@ -16,11 +33,21 @@ const DashboardProjects = ({virtualboxes}: {virtualboxes: VirtualBox[]}) => {
                             <div className="font-medium flex items-center whitespace-nowrap w-full text-ellipsis overflow-hidden">
                                 {virtualbox.name}
                             </div>
-                            <ProjectCardDropdown virtualbox={virtualbox} />
+                            <ProjectCardDropdown virtualbox={virtualbox} onVisibilityChange={onVisibilityChange} onDelete={onDelete} />
                         </div>
                         <div className="flex flex-col text-muted-foreground space-y-0.5 text-sm">
                             <div className="flex items-center">
-                                <Globe className="w-3 h-3 mr-2" /> Public
+                                {virtualbox.visibility === "public" ? (
+                                    <>
+                                    <Globe className="mr-2 h-4 w-4" />
+                                    <span>Public</span>
+                                    </>
+                                ) : (
+                                    <>
+                                    <Lock className="mr-2 h-4 w-4" />
+                                    <span>Private</span>
+                                    </>
+                                )}
                             </div>
                             <div className="flex items-center">
                                 <Globe className="w-3 h-3 mr-2" /> 3d ago
@@ -34,4 +61,3 @@ const DashboardProjects = ({virtualboxes}: {virtualboxes: VirtualBox[]}) => {
 }
 
 export default DashboardProjects
-

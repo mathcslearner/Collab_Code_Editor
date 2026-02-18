@@ -3,8 +3,15 @@
 import { LogOut, Pencil } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "./dropdown-menu"
 import { User } from "@/lib/types"
+import { useClerk } from "@clerk/nextjs"
+import { useRouter } from "next/navigation"
 
 const UserButton = ({userData}: {userData: User}) => {
+    if (!userData) return null
+
+    const {signOut} = useClerk()
+    const router = useRouter()
+
     return (
         <div className="shrink-0">
         <DropdownMenu>
@@ -19,7 +26,7 @@ const UserButton = ({userData}: {userData: User}) => {
                     <span>Edit Profile</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="!text-destructive cursor-pointer">
+                <DropdownMenuItem className="!text-destructive cursor-pointer" onClick={() => signOut(() => router.push("/"))}>
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log Out</span>
                 </DropdownMenuItem>

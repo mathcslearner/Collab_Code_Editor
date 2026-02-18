@@ -2,9 +2,9 @@
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { VirtualBox } from "@/lib/types"
-import { Ellipsis, Lock, Trash2 } from "lucide-react"
+import { Ellipsis, Globe, Lock, Trash2 } from "lucide-react"
 
-const ProjectCardDropdown = ({virtualbox}: {virtualbox: VirtualBox}) => {
+const ProjectCardDropdown = ({virtualbox, onVisibilityChange, onDelete}: {virtualbox: VirtualBox, onVisibilityChange: (virtualbox: VirtualBox) => void, onDelete: (virtualbox: VirtualBox) => void}) => {
     return (
         <DropdownMenu>
             <DropdownMenuTrigger onClick={(e) => {
@@ -14,11 +14,28 @@ const ProjectCardDropdown = ({virtualbox}: {virtualbox: VirtualBox}) => {
                 <Ellipsis className="w-4 h-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-40">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation()
+                    onVisibilityChange(virtualbox)
+                }}>
+                    {virtualbox.visibility === "public" ? (
+                        <>
+                        <Lock className="mr-2 h-4 w-4" />
+                        <span>Make Private</span>
+                        </>
+                    ) : (
+                        <>
+                        <Globe className="mr-2 h-4 w-4" />
+                        <span>Make Public</span>
+                        </>
+                    )}
                     <Lock className="mr-2 h-4 w-4" />
                     <span>Make Private</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation()
+                    onDelete(virtualbox)
+                }} className="!text-destructive cursor-pointer">
                     <Trash2 className="mr-2 h-4 w-4"></Trash2>
                     <span>Delete Project</span>
                 </DropdownMenuItem>

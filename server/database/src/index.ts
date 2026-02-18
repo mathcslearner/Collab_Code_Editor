@@ -27,7 +27,8 @@ export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		const success = new Response("Success", {status: 200})
 		const notFound = new Response("Not Found", {status: 404})
-		const methodNotAllowed = new Response("Method Not Allowed")
+		const methodNotAllowed = new Response("Method Not Allowed", {status: 405})
+		const invalidRequest = new Response("Invalid Request", {status: 400})
 
 		const url = new URL(request.url);
 		const path = url.pathname;
@@ -48,6 +49,28 @@ export default {
 					const res = await db.select().from(schema.virtualbox).all()
 					return json(res ?? {})
 				}
+			} else if (method === "DELETE") {
+				const params = url.searchParams
+				if (params.has("id")) {
+					const id = params.get("id") as string
+					const res = await db.delete(schema.virtualbox).where(eq(schema.virtualbox.id, id)).get()
+					return success
+				} else {
+					return invalidRequest
+				}
+			} else if (method === "PUT") {
+				const initSchema = z.object({
+					id: z.string(),
+					name: z.string().optional(),
+					visibility: z.enum(["public", "private"]).optional()
+				})
+
+				const body = await request.json()
+				const {id, name, visibility} = initSchema.parse(body)
+
+				const vb = await db.update(schema.virtualbox).set({ name, visibility}).where(eq(schema.virtualbox.id, id)).returning().get()
+
+				return success
 			} else if (method === "POST") {
 				const initSchema = z.object({
 					type: z.enum(["react", "node"]),

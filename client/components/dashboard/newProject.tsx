@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import CustomButton from "../ui/customButton"
 import { Loader2 } from "lucide-react"
 import { useUser } from "@clerk/nextjs"
-import createVirtualbox from "@/lib/actions"
+import {createVirtualbox} from "@/lib/actions"
 import { useRouter } from "next/navigation"
 
 type TOptions = "react" | "node"
