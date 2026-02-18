@@ -1,8 +1,6 @@
 
 
-export const renameFile = async (fileId: string, newName: string, data: string) => {
-    const parts = fileId.split("/")
-    const newFileId = parts.slice(0, parts.length - 1).join("/") + "/" + newName
+export const renameFile = async (fileId: string, newFileId: string, data: string) => {
 
     const res = await fetch(`https://storage.mzli.workers.dev/api/rename`, {
         method: "POST",
@@ -22,6 +20,18 @@ export const saveFile = async (fileId: string, data: string) => {
             "Content-Type": "applications/json"
         },
         body: JSON.stringify({fileId, data})
+    })
+
+    return res.ok
+}
+
+export const createFile = async (fileId: string) => {
+    const res = await fetch(`https://storage.mzli.workers.dev/api`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "applications/json"
+        },
+        body: JSON.stringify({fileId})
     })
 
     return res.ok

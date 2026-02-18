@@ -6,8 +6,9 @@ import SidebarFile from "./file"
 import { TFile, TFolder, TTab } from "./types"
 import { useState } from "react"
 import New from "./new"
+import { Socket } from "socket.io-client"
 
-const Sidebar = ({files, selectFile, handleRename}: {files: (TFile | TFolder)[]; selectFile: (tab: TTab) => void; handleRename: (id: string, newName: string, oldName: string, type: "file" | "folder") => boolean}) => {
+const Sidebar = ({files, selectFile, handleRename, socket, addNew}: {files: (TFile | TFolder)[]; selectFile: (tab: TTab) => void; handleRename: (id: string, newName: string, oldName: string, type: "file" | "folder") => boolean, socket: Socket, addNew: (name: string, type: "file" | "folder") => void}) => {
     const [creatingNew, setCreatingNew] = useState<"file" | "folder" | null>(null)
 
     return(
@@ -41,7 +42,7 @@ const Sidebar = ({files, selectFile, handleRename}: {files: (TFile | TFolder)[];
                     )
                 )}
                 {creatingNew !== null ? (
-                    <New type={creatingNew} stopEditing={() => setCreatingNew(null)} />
+                    <New type={creatingNew} stopEditing={() => setCreatingNew(null)} socket={socket} addNew={addNew} />
                 ) : null}
             </div>
         </div>

@@ -143,7 +143,13 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
 
     return (
         <>
-        <Sidebar files={files} selectFile={selectFile} handleRename={handleRename}/>
+        <Sidebar files={files} selectFile={selectFile} handleRename={handleRename} socket={socket} addNew={(name, type) => {
+            if (type === "file") {
+                setFiles((prev) => [...prev, {id: `projects/${virtualboxId}/${name}`, name, type: "file"}])
+            } else {
+                console.log("adding folder")
+            }
+        }}/>
         <ResizablePanelGroup orientation="horizontal">
             <ResizablePanel minSize={30} defaultSize={60} className="flex flex-col p-2">
                 <div className="h-10 w-full flex gap-2">

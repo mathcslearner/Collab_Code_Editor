@@ -1,12 +1,23 @@
 "use client"
 
+import { validateName } from "@/lib/utils"
 import Image from "next/image"
 import { useEffect, useRef } from "react"
+import { Socket } from "socket.io-client"
 
-const New = ({type, stopEditing}: {type: "file"|"folder", stopEditing: () => void}) => {
+const New = ({socket, type, stopEditing, addNew}: {socket: Socket, type: "file"|"folder", stopEditing: () => void, addNew: (name: string, type: "file" | "folder") => void}) => {
     const inputRef = useRef<HTMLInputElement>(null)
 
-    const createFile = () => {
+    const createNew = () => {
+        const name = inputRef.current?.value
+
+        if (name && validateName(name, "", type)) {
+            if (type === "file") {
+                socket.emit("createFile", name)
+            }
+            addNew(name, type)
+        }
+
         stopEditing()
     }
 
@@ -19,9 +30,9 @@ const New = ({type, stopEditing}: {type: "file"|"folder", stopEditing: () => voi
             <Image src={type === "file" ? "/icons/default_file.svg" : "/icons/default_folder.svg"} alt="File Icon" width={18} height={18} className="mr-2" />
             <form onSubmit={(e) => {
                 e.preventDefault()
-                createFile()
+                createNew()
             }}>
-                <input className={`bg-transparentrounded-sm w-full outline-foreground transition-all focus-visible:outline-none focus-visible-ring-offset-2 focus-visible:ring-offset-background focus-visible:ring-2 focus-visible:ring-ring`} ref={inputRef} onBlur={() => createFile()} />
+                <input className={`bg-transparentrounded-sm w-full outline-foreground transition-all focus-visible:outline-none focus-visible-ring-offset-2 focus-visible:ring-offset-background focus-visible:ring-2 focus-visible:ring-ring`} ref={inputRef} onBlur={() => createNew()} />
             </form>
         </div>
     )

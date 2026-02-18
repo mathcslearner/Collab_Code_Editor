@@ -59,7 +59,16 @@ export default {
 				}
 
 			} else if (method === "POST") {
-				return new Response("Hello World")
+				const createSchema = z.object({
+					fileId: z.string()
+				})
+
+				const body = await request.json()
+				const {fileId} = createSchema.parse(body)
+
+				await env.R2.put(fileId, "")
+
+				return success
 			} else return methodNotAllowed
 		} else if (path === "/api/rename" && method === "POST") {
 			const renameSchema = z.object({
