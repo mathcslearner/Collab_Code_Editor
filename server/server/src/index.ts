@@ -7,6 +7,8 @@ import { createFile, renameFile, saveFile } from "./utils";
 import { Pty } from "./terminal";
 import path from "path";
 import fs from "fs"
+import {IDisposable, IPty, spawn} from "node-pty"
+import os from "os"
 
 const app: Express = express();
 
@@ -19,7 +21,7 @@ const io = new Server(httpServer, {
     }
 })
 
-const terminals: {[id: string]: Pty} = {}
+const terminals: {[id: string]: {terminal: IPty, onData: IDisposable, onExit: IDisposable}} = {}
 
 const dirName = path.join(__dirname, "..")
 
@@ -139,16 +141,42 @@ io.on("connection", async (socket) => {
     })
 
     socket.on("createTerminal", ({id}: {id: string}) => {
-        terminals[id] = new Pty(socket, id, `/projects/${data.id}`)
+        const pty = spawn(os.platform() === "win32" ? "cmd.exe" : "bash", [], {
+            name: "xterm", cols: 100, cwd: path.join(dirName, "projects", data.id)
+        })
+
+        const onData = pty.onData((data) => {
+            socket.emit("terminalResponse", {
+                data
+            })
+        })
+
+        const onExit = pty.onExit((code) => console.log("exit:(", code))
+        terminals[id] = {terminal: pty, onData, onExit}
     })
 
     socket.on("terminalData", ({id, data}: {id: string, data: string}) => {
         if (!terminals[id]) return
 
-        terminals[id].write(data)
+        try {
+            terminals[id].terminal.write(data)
+        } catch (err) {
+            console.log("Error writing to terminal", err)
+        }
     })
 
-    socket.on("disconnect", () => {})
+    socket.on("disconnect", () => {
+        Object.entries(terminals).forEach((t) => {
+            const {terminal, onData, onExit} = t[1]
+            if (os.platform() !== "win32") {
+                terminal.kill()
+            } 
+
+            onData.dispose()
+            onExit.dispose()
+            delete terminals[t[0]]
+        })
+    })
 
 })
 

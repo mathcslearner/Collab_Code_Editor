@@ -5,15 +5,13 @@ import os from "os"
 export class Pty {
     socket: Socket
     ptyProcess: IPty
-    shell: string
     id: string
 
     constructor(socket: Socket, id: string, cwd: string) {
         this.socket = socket 
-        this.shell = os.platform() === "win32" ? "cmd.exe" : "bash"
         this.id = id
 
-        this.ptyProcess = spawn(this.shell, [], {
+        this.ptyProcess = spawn(os.platform() === "win32" ? "cmd.exe" : "bash", [], {
             name: "xterm",
             cols: 100,
             cwd: cwd

@@ -18,9 +18,10 @@ const socket_io_1 = require("socket.io");
 const getVirtualboxFiles_1 = __importDefault(require("./getVirtualboxFiles"));
 const zod_1 = require("zod");
 const utils_1 = require("./utils");
-const terminal_1 = require("./terminal");
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
+const node_pty_1 = require("node-pty");
+const os_1 = __importDefault(require("os"));
 const app = (0, express_1.default)();
 const port = process.env.PORT || 4000;
 const httpServer = (0, http_1.createServer)(app);
@@ -119,12 +120,26 @@ io.on("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () {
         yield (0, utils_1.renameFile)(fileId, newFileId, file.data);
     }));
     socket.on("createTerminal", ({ id }) => {
-        terminals[id] = new terminal_1.Pty(socket, id, `/projects/${data.id}`);
+        const pty = (0, node_pty_1.spawn)(os_1.default.platform() === "win32" ? "cmd.exe" : "bash", [], {
+            name: "xterm", cols: 100, cwd: path_1.default.join(dirName, "projects", data.id)
+        });
+        pty.onData((data) => {
+            socket.emit("terminalResponse", {
+                data
+            });
+        });
+        pty.onExit((code) => console.log("exit:(", code));
+        terminals[id] = pty;
     });
     socket.on("terminalData", ({ id, data }) => {
         if (!terminals[id])
             return;
-        terminals[id].write(data);
+        try {
+            terminals[id].write(data);
+        }
+        catch (err) {
+            console.log("Error writing to terminal", err);
+        }
     });
     socket.on("disconnect", () => { });
 }));
