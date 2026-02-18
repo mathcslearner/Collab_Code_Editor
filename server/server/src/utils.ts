@@ -36,3 +36,15 @@ export const createFile = async (fileId: string) => {
 
     return res.ok
 }
+
+export const deleteFile = async (fileId: string) => {
+    const res = await fetch(`https://storage.mzli.workers.dev/api`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "applications/json"
+        },
+        body: JSON.stringify({fileId})
+    })
+
+    return res.ok
+}

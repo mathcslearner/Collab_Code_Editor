@@ -84,6 +84,8 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
         const numTabs = tabs.length
         const index = tabs.findIndex((t) => t.id === tab.id)
 
+        if (index === -1) return
+
         const nextId = activeId === tab.id ? numTabs === 1 ? null : index < numTabs - 1 ? tabs[index + 1].id : tabs[index - 1].id : activeId
 
         const nextTab = tabs.find((t) => t.id === nextId)
@@ -141,9 +143,20 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
         }
     }, [tabs, activeId])
 
+    const handleDeleteFile = (file: TFile) => {
+        socket.emit("deleteFile", file.id, (response: (TFolder | TFile)[]) => {
+            setFiles(response)
+        })
+        closeTab(file)
+    }
+
+    const handleDeleteFolder = (folder: TFolder) => {
+        
+    }
+
     return (
         <>
-        <Sidebar files={files} selectFile={selectFile} handleRename={handleRename} socket={socket} addNew={(name, type) => {
+        <Sidebar files={files} selectFile={selectFile} handleRename={handleRename} handleDeleteFile={handleDeleteFile} handleDeleteFolder={handleDeleteFolder} socket={socket} addNew={(name, type) => {
             if (type === "file") {
                 setFiles((prev) => [...prev, {id: `projects/${virtualboxId}/${name}`, name, type: "file"}])
             } else {

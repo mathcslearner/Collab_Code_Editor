@@ -106,6 +106,19 @@ io.on("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () {
         virtualboxFiles.fileData.push({ id, data: "" });
         yield (0, utils_1.createFile)(id);
     }));
+    socket.on("deleteFile", (fileId, callback) => __awaiter(void 0, void 0, void 0, function* () {
+        const file = virtualboxFiles.fileData.find((f) => f.id === fileId);
+        if (!file)
+            return;
+        fs_1.default.unlink(path_1.default.join(dirName, fileId), function (err) {
+            if (err)
+                throw err;
+        });
+        virtualboxFiles.fileData = virtualboxFiles.fileData.filter((f) => f.id !== fileId);
+        yield (0, utils_1.deleteFile)(fileId);
+        const newFiles = yield (0, getVirtualboxFiles_1.default)(data.id);
+        callback(newFiles.files);
+    }));
     socket.on("renameFile", (fileId, newName) => __awaiter(void 0, void 0, void 0, function* () {
         const file = virtualboxFiles.fileData.find((f) => f.id === fileId);
         if (!file)
@@ -123,25 +136,35 @@ io.on("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () {
         const pty = (0, node_pty_1.spawn)(os_1.default.platform() === "win32" ? "cmd.exe" : "bash", [], {
             name: "xterm", cols: 100, cwd: path_1.default.join(dirName, "projects", data.id)
         });
-        pty.onData((data) => {
+        const onData = pty.onData((data) => {
             socket.emit("terminalResponse", {
                 data
             });
         });
-        pty.onExit((code) => console.log("exit:(", code));
-        terminals[id] = pty;
+        const onExit = pty.onExit((code) => console.log("exit:(", code));
+        terminals[id] = { terminal: pty, onData, onExit };
     });
     socket.on("terminalData", ({ id, data }) => {
         if (!terminals[id])
             return;
         try {
-            terminals[id].write(data);
+            terminals[id].terminal.write(data);
         }
         catch (err) {
             console.log("Error writing to terminal", err);
         }
     });
-    socket.on("disconnect", () => { });
+    socket.on("disconnect", () => {
+        Object.entries(terminals).forEach((t) => {
+            const { terminal, onData, onExit } = t[1];
+            if (os_1.default.platform() !== "win32") {
+                terminal.kill();
+            }
+            onData.dispose();
+            onExit.dispose();
+            delete terminals[t[0]];
+        });
+    });
 }));
 httpServer.listen(port, () => {
     console.log(`Server running on port ${port}`);

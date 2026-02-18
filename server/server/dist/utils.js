@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createFile = exports.saveFile = exports.renameFile = void 0;
+exports.deleteFile = exports.createFile = exports.saveFile = exports.renameFile = void 0;
 const renameFile = (fileId, newFileId, data) => __awaiter(void 0, void 0, void 0, function* () {
     const res = yield fetch(`https://storage.mzli.workers.dev/api/rename`, {
         method: "POST",
@@ -43,3 +43,14 @@ const createFile = (fileId) => __awaiter(void 0, void 0, void 0, function* () {
     return res.ok;
 });
 exports.createFile = createFile;
+const deleteFile = (fileId) => __awaiter(void 0, void 0, void 0, function* () {
+    const res = yield fetch(`https://storage.mzli.workers.dev/api`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "applications/json"
+        },
+        body: JSON.stringify({ fileId })
+    });
+    return res.ok;
+});
+exports.deleteFile = deleteFile;

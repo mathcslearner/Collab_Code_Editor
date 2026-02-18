@@ -8,7 +8,7 @@ import { useState } from "react"
 import New from "./new"
 import { Socket } from "socket.io-client"
 
-const Sidebar = ({files, selectFile, handleRename, socket, addNew}: {files: (TFile | TFolder)[]; selectFile: (tab: TTab) => void; handleRename: (id: string, newName: string, oldName: string, type: "file" | "folder") => boolean, socket: Socket, addNew: (name: string, type: "file" | "folder") => void}) => {
+const Sidebar = ({files, selectFile, handleRename, socket, addNew, handleDeleteFile, handleDeleteFolder}: {files: (TFile | TFolder)[]; selectFile: (tab: TTab) => void; handleRename: (id: string, newName: string, oldName: string, type: "file" | "folder") => boolean, socket: Socket, addNew: (name: string, type: "file" | "folder") => void, handleDeleteFile: (file: TFile) => void, handleDeleteFolder: (folder: TFolder) => void}) => {
     const [creatingNew, setCreatingNew] = useState<"file" | "folder" | null>(null)
 
     return(
@@ -35,9 +35,9 @@ const Sidebar = ({files, selectFile, handleRename, socket, addNew}: {files: (TFi
                 ) : (
                     files.map((child) => 
                         child.type === "file" ? (
-                            <SidebarFile key={child.id} data={child} selectFile={selectFile} handleRename={handleRename}/> 
+                            <SidebarFile key={child.id} data={child} selectFile={selectFile} handleRename={handleRename} handleDeleteFile={handleDeleteFile} /> 
                         ) : ( 
-                            <SidebarFolder key={child.id} data={child} selectFile={selectFile} handleRename={handleRename}/>
+                            <SidebarFolder key={child.id} data={child} selectFile={selectFile} handleRename={handleRename} handleDeleteFile={handleDeleteFile} handleDeleteFolder={handleDeleteFolder} />
                         )
                     )
                 )}

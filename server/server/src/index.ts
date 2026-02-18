@@ -3,7 +3,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import getVirtualboxFiles from "./getVirtualboxFiles";
 import {z} from "zod"
-import { createFile, renameFile, saveFile } from "./utils";
+import { createFile, deleteFile, renameFile, saveFile } from "./utils";
 import { Pty } from "./terminal";
 import path from "path";
 import fs from "fs"
@@ -122,6 +122,23 @@ io.on("connection", async (socket) => {
         virtualboxFiles.fileData.push({id, data: ""})
 
         await createFile(id)
+    })
+
+    socket.on("deleteFile", async (fileId: string, callback) => {
+        const file = virtualboxFiles.fileData.find((f) => f.id === fileId)
+
+        if (!file) return
+
+        fs.unlink(path.join(dirName, fileId), function (err) {
+            if (err) throw err
+        })
+
+        virtualboxFiles.fileData = virtualboxFiles.fileData.filter((f) => f.id !== fileId)
+
+        await deleteFile(fileId)
+
+        const newFiles = await getVirtualboxFiles(data.id)
+        callback(newFiles.files)
     })
 
     socket.on("renameFile", async (fileId: string, newName: string) => {

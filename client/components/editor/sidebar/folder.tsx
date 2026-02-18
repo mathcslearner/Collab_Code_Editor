@@ -6,7 +6,7 @@ import { getIconForFolder, getIconForOpenFolder } from "vscode-icons-js"
 import Image from "next/image"
 import SidebarFile from "./file"
 
-const SidebarFolder = ({data, selectFile, handleRename}: {data: TFolder, selectFile: (file: TTab) => void, handleRename: (id: string, newName: string, oldName: string, type: "file" | "folder") => boolean}) => {
+const SidebarFolder = ({data, selectFile, handleRename, handleDeleteFile, handleDeleteFolder}: {data: TFolder, selectFile: (file: TTab) => void, handleRename: (id: string, newName: string, oldName: string, type: "file" | "folder") => boolean, handleDeleteFile: (file: TFile) => void, handleDeleteFolder: (folder: TFolder) => void}) => {
     const [isOpen, setIsOpen] = useState(false)
     const folder = isOpen ? getIconForOpenFolder(data.name) : getIconForFolder(data.name);
 
@@ -47,9 +47,9 @@ const SidebarFolder = ({data, selectFile, handleRename}: {data: TFolder, selectF
                 <div className="w-px bg-border mx-2 h-full"></div>
                 <div className="flex flex-col grow">
                     {data.children.map((child) => child.type === "file" ? (
-                        <SidebarFile key={child.id} data={child} selectFile={selectFile} handleRename={handleRename}/>
+                        <SidebarFile key={child.id} data={child} selectFile={selectFile} handleRename={handleRename} handleDeleteFile={handleDeleteFile} />
                     ) : (
-                        <SidebarFolder key={child.id} data={child} selectFile={selectFile} handleRename={handleRename}/>
+                        <SidebarFolder key={child.id} data={child} selectFile={selectFile} handleRename={handleRename} handleDeleteFile={handleDeleteFile} handleDeleteFolder={handleDeleteFolder} />
                     ))}
                 </div>
             </div>
