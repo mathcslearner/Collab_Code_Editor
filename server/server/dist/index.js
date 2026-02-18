@@ -71,12 +71,19 @@ io.on("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () {
             return;
         callback(file.data);
     });
+    socket.on("saveFile", (fileId, body) => __awaiter(void 0, void 0, void 0, function* () {
+        const file = virtualboxFiles.fileData.find((f) => f.id === fileId);
+        if (!file)
+            return;
+        file.data = body;
+        yield (0, utils_1.saveFile)(fileId, body);
+    }));
     socket.on("renameFile", (fileId, newName) => __awaiter(void 0, void 0, void 0, function* () {
         const file = virtualboxFiles.fileData.find((f) => f.id === fileId);
         if (!file)
             return;
-        yield (0, utils_1.renameFile)(fileId, newName, file.data);
         file.id = newName;
+        yield (0, utils_1.renameFile)(fileId, newName, file.data);
     }));
 }));
 httpServer.listen(port, () => {

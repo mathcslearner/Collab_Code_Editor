@@ -76,7 +76,18 @@ export default {
 			await env.R2.put(newFileId, data)
 
 			return success
-		} else if (path === "/api/init" && method === "POST") {
+		} else if (path === "/api/save" && method === "POST") {
+			const saveSchema = z.object({
+				fileId: z.string(),
+				data: z.string()
+			})
+
+			const body = await request.json 
+
+			const {fileId, data} = saveSchema.parse(body)
+
+			await env.R2.put(fileId, data)
+		}else if (path === "/api/init" && method === "POST") {
 			const initSchema = z.object({
 				virtualboxId: z.string(),
 				type: z.enum(["react", "node"])

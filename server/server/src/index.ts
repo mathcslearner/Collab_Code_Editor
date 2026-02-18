@@ -3,7 +3,7 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import getVirtualboxFiles from "./getVirtualboxFiles";
 import {z} from "zod"
-import { renameFile } from "./utils";
+import { renameFile, saveFile } from "./utils";
 
 const app: Express = express();
 
@@ -81,14 +81,23 @@ io.on("connection", async (socket) => {
         callback(file.data)
     })
 
+    socket.on("saveFile", async (fileId: string, body: string) => {
+        const file = virtualboxFiles.fileData.find((f) => f.id === fileId)
+
+        if (!file) return
+
+        file.data = body
+
+        await saveFile(fileId, body)
+    })
+
     socket.on("renameFile", async (fileId: string, newName: string) => {
         const file = virtualboxFiles.fileData.find((f) => f.id === fileId)
 
         if (!file) return
 
-        await renameFile(fileId, newName, file.data)
-
         file.id = newName
+        await renameFile(fileId, newName, file.data)
     })
 })
 

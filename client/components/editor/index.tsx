@@ -111,6 +111,26 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
         return true
     }
 
+    useEffect(() => {
+        const down = (e: KeyboardEvent) => {
+            if (e.key === "s" && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault()
+
+                const activeTab = tabs.find((t) => t.id === activeId)
+
+                setTabs((prev) => prev.map((tab) => tab.id === activeId ? {...tab, saved: true} : tab))
+            }
+
+            socket.emit("saveFile", activeId, editorRef.current?.getValue())
+        }
+
+        document.addEventListener("keydown", down)
+
+        return () => {
+            document.removeEventListener("keydown", down)
+        }
+    }, [tabs, activeId])
+
     return (
         <>
         <Sidebar files={files} selectFile={selectFile} handleRename={handleRename}/>
