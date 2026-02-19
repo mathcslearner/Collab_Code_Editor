@@ -37,7 +37,8 @@ export const virtualBoxRelations = relations(virtualbox, ({one, many}) => ({
 
 export const usersToVirtualboxes = sqliteTable("users_to_virtualboxes", {
     userId: text("userId").notNull().references(() => user.id),
-    virtualboxId: text("virtualboxId").notNull().references(() => virtualbox.id)
+    virtualboxId: text("virtualboxId").notNull().references(() => virtualbox.id),
+    sharedOn: integer("sharedOn", {mode: "timestamp_ms"})
 })
 
 export const usersToVirtualboxesRelations = relations(usersToVirtualboxes, ({one}) => ({

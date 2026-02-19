@@ -8,10 +8,11 @@ import { VirtualBox } from "@/lib/types"
 import DashboardSharedWithMe from "./shared"
 import DashboardProjects from "./projects"
 import NewProjectModal from "./newProject"
+import { useSearchParams } from "next/navigation"
 
 type TScreen = "projects" | "shared" | "settings" | "search";
 
-const Dashboard = ({virtualboxes}: {virtualboxes: VirtualBox[]}) => {
+const Dashboard = ({virtualboxes, shared}: {virtualboxes: VirtualBox[], shared: {id: string, name: string, type: "react" | "node", author: {id: string, name: string, email: string, image: any}, sharedOn: Date}[]}) => {
     const [screen, setScreen] = useState<TScreen>("projects")
     const [newProjectModalOpen, setNewProjectModalOpen] = useState(false)
 
@@ -22,6 +23,9 @@ const Dashboard = ({virtualboxes}: {virtualboxes: VirtualBox[]}) => {
             return "justify-start font-normal text-muted-foreground"
         }
     }
+
+    const searchParams = useSearchParams()
+    const q = searchParams.get("q")
 
     return (
         <>
@@ -58,8 +62,8 @@ const Dashboard = ({virtualboxes}: {virtualboxes: VirtualBox[]}) => {
                     </div>
                 </div>
                 {screen === "projects" ? (
-                    <DashboardProjects virtualboxes={virtualboxes}/>
-                ): screen === "shared" ? <DashboardSharedWithMe virtualboxes={virtualboxes} /> : screen === "settings" ? null : null}
+                    <DashboardProjects virtualboxes={virtualboxes} q={q} />
+                ): screen === "shared" ? <DashboardSharedWithMe shared={shared} /> : screen === "settings" ? null : null}
             </div>
         </>
     )

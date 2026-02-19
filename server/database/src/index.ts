@@ -100,7 +100,32 @@ export default {
 				return new Response(vb.id, {status: 200})
 			}
 		} else if (path === "/api/virtualbox/share") {
-			if (method === "POST") {
+			if (method === "GET") {
+				const params = url.searchParams
+
+				if (params.has("id")) {
+					const id = params.get("id") as string
+					const res = await db.query.usersToVirtualboxes.findMany({
+						where: (utv, {eq}) => eq(utv.userId, id)
+					})
+
+					const owners = await Promise.all(
+						res.map(async (r) => {
+							const vb = await db.query.virtualbox.findFirst({
+								where: (virtualbox, {eq}) => eq(schema.virtualbox.id, r.virtualboxId),
+								with: {
+									author: true
+								}
+							})
+							
+							if (!vb) return
+							return {id: vb.id, name: vb.name, type: vb.type, author: vb.author, sharedOn: r.sharedOn}
+						})
+					)
+
+					return json(owners ?? {})
+				} else return invalidRequest
+			} else if (method === "POST") {
 				const shareSchema = z.object({
 					virtualboxId: z.string(),
 					email: z.string()
@@ -113,6 +138,7 @@ export default {
 				const user = await db.query.user.findFirst({
 					where: (user, {eq}) => eq(user.email, email),
 					with: {
+						virtualbox: true,
 						usersToVirtualboxes: true
 					}
 				})
@@ -120,12 +146,16 @@ export default {
 				if (!user) {
 					return new Response("No user associated with email", {status: 400})
 				}
+
+				if (user.virtualbox.find((vb) => vb.id === virtualboxId)) {
+					return new Response("Cannot share with yourself", {status: 400})
+				}
 	
 				if (user.usersToVirtualboxes.find((utv) => utv.virtualboxId === virtualboxId)) {
 					return new Response("User already has access", {status: 400})
 				}
 	
-				await db.insert(schema.usersToVirtualboxes).values({userId: user.id, virtualboxId}).get()
+				await db.insert(schema.usersToVirtualboxes).values({userId: user.id, virtualboxId, sharedOn: new Date()}).get()
 	
 				return success
 			} else if (method === "DELETE") {

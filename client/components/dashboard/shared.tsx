@@ -5,7 +5,7 @@ import { Button } from "../ui/button"
 import { ChevronRight } from "lucide-react"
 import Avatar from "../ui/avatar"
 
-const DashboardSharedWithMe = ({virtualboxes}: {virtualboxes: VirtualBox[]}) => {
+const DashboardSharedWithMe = ({shared}: { shared: {id: string, name: string, type: "react" | "node", author: {id: string, name: string, email: string}, sharedOn: Date}[]}) => {
     return (
         <div className="grow p-4 flex flex-col">
             <div className="text-xl font-medium mb-8">Shared With Me</div>
@@ -15,12 +15,12 @@ const DashboardSharedWithMe = ({virtualboxes}: {virtualboxes: VirtualBox[]}) => 
                         <TableRow>
                             <TableHead>Virtualbox Name</TableHead>
                             <TableHead>Shared By</TableHead>
-                            <TableHead>Opened</TableHead>
-                            <TableHead></TableHead>
+                            <TableHead>Sent On</TableHead>
+                            <TableHead className="text-right"></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {virtualboxes.map((virtualbox) => (
+                        {shared.map((virtualbox) => (
                             <TableRow key={virtualbox.id}>
                                 <TableCell>
                                     <div className="font-medium flex items-center">
@@ -30,12 +30,12 @@ const DashboardSharedWithMe = ({virtualboxes}: {virtualboxes: VirtualBox[]}) => 
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex items-center">
-                                        <Avatar name="Ming Zhe Li" className="mr-2" />
-                                        Ming Zhe Li 
+                                        <Avatar name={virtualbox.author.name} className="mr-2" />
+                                        {virtualbox.author.name}
                                     </div>
                                 </TableCell>
                                 <TableCell>
-                                    {new Date().toLocaleDateString()}
+                                    {new Date(virtualbox.sharedOn).toLocaleDateString()}
                                 </TableCell>
                                 <TableCell>
                                     <Button>
