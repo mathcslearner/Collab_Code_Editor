@@ -11,7 +11,7 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { user } from "./schema";
 import { json } from "itty-router-extras";
 import { drizzle } from "drizzle-orm/d1";
@@ -56,7 +56,8 @@ export default {
 				const params = url.searchParams
 				if (params.has("id")) {
 					const id = params.get("id") as string
-					const res = await db.delete(schema.virtualbox).where(eq(schema.virtualbox.id, id)).get()
+					await db.delete(schema.usersToVirtualboxes).where(eq(schema.usersToVirtualboxes.virtualboxId, id))
+					await db.delete(schema.virtualbox).where(eq(schema.virtualbox.id, id))
 					return success
 				} else {
 					return invalidRequest
@@ -98,34 +99,49 @@ export default {
 				await env.STORAGE.fetch(initStorageRequest)
 				return new Response(vb.id, {status: 200})
 			}
-		} else if (path === "/api/virtualbox/share" && method === "POST") {
-			const shareSchema = z.object({
-				virtualboxId: z.string(),
-				email: z.string()
-			})
-
-			const body = await request.json()
-
-			const {virtualboxId, email} = shareSchema.parse(body)
-
-			const user = await db.query.user.findFirst({
-				where: (user, {eq}) => eq(user.email, email),
-				with: {
-					usersToVirtualboxes: true
+		} else if (path === "/api/virtualbox/share") {
+			if (method === "POST") {
+				const shareSchema = z.object({
+					virtualboxId: z.string(),
+					email: z.string()
+				})
+	
+				const body = await request.json()
+	
+				const {virtualboxId, email} = shareSchema.parse(body)
+	
+				const user = await db.query.user.findFirst({
+					where: (user, {eq}) => eq(user.email, email),
+					with: {
+						usersToVirtualboxes: true
+					}
+				})
+	
+				if (!user) {
+					return new Response("No user associated with email", {status: 400})
 				}
-			})
+	
+				if (user.usersToVirtualboxes.find((utv) => utv.virtualboxId === virtualboxId)) {
+					return new Response("User already has access", {status: 400})
+				}
+	
+				await db.insert(schema.usersToVirtualboxes).values({userId: user.id, virtualboxId}).get()
+	
+				return success
+			} else if (method === "DELETE") {
+				const deleteShareSchema = z.object({
+					virtualboxId: z.string(),
+					userId: z.string()
+				})
 
-			if (!user) {
-				return new Response("No user associated with email", {status: 400})
-			}
+				const body = await request.json()
 
-			if (user.usersToVirtualboxes.find((utv) => utv.virtualboxId === virtualboxId)) {
-				return new Response("User already has access", {status: 400})
-			}
+				const {virtualboxId, userId} = deleteShareSchema.parse(body)
 
-			await db.insert(schema.usersToVirtualboxes).values({userId: user.id, virtualboxId}).get()
+				await db.delete(schema.usersToVirtualboxes).where(and(eq(schema.usersToVirtualboxes.userId, userId), eq(schema.usersToVirtualboxes.virtualboxId, virtualboxId)))
 
-			return success
+				return success
+			} else return methodNotAllowed
 		} else if (path === "/api/user") {
 			if (method === "GET") {
 				const params = url.searchParams;

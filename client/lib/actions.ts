@@ -57,3 +57,15 @@ export const shareVirtualbox = async (virtualboxId: string, email:string) => {
         return {success: false, message: err}
     }
 }
+
+export const unshareVirtualbox = async (virtualboxId: string, userId: string) => {
+    const res = await fetch("https://database.mzli.workers.dev/api/virtualbox/share", {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application.json"
+        },
+        body: JSON.stringify({virtualboxId, userId})
+    })
+
+    revalidatePath(`/code/${virtualboxId}`)
+}

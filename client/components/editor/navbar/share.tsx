@@ -2,7 +2,7 @@
 
 import Avatar from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -14,6 +14,7 @@ import { useState } from "react"
 import { Form, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import z from "zod"
+import SharedUser from "./sharedUser"
 
 const formSchema = z.object({
     email: z.string().email()
@@ -45,9 +46,14 @@ const ShareVirtualboxModal = ({open, setOpen, data, shared}: {open: boolean, set
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent>
-                <div className="p-6 pb-3 space-y-6">
+                <div className={`p-6 ${shared.length > 0 ? "pb-3" : null} space-y-6`}>
                     <DialogHeader>
                         <DialogTitle>Share Virtualbox</DialogTitle>
+                        {data.visibility === "private" ? (
+                            <DialogDescription className="text-sm text-muted-foreground">
+                                This virtualbox is private. Making it public will allow shared users to view and collaborate.
+                            </DialogDescription>
+                        ) : null}
                     </DialogHeader>
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -74,25 +80,21 @@ const ShareVirtualboxModal = ({open, setOpen, data, shared}: {open: boolean, set
                         </form>
                     </Form>
                 </div>
-                <div className="w-full h-[1px] bg-border" />
-                <div className="p-6 pt-3">
-                    <DialogHeader className="mb-3">
-                        <DialogTitle>Manage Access</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-2">
-                        {shared.map((user) => (
-                            <div key={user.id} className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                    <Avatar name={user.name} className="mr-2" />
-                                    {user.name}
-                                </div>
-                                <Button variant={"ghost"} size="smIcon">
-                                    <X className="w-4 h-4" />
-                                </Button>
+                {shared.length > 0 ? (
+                    <>
+                        <div className="w-full h-[1px] bg-border" />
+                        <div className="p-6 pt-3">
+                            <DialogHeader className="mb-3">
+                                <DialogTitle>Manage Access</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-2">
+                                {shared.map((user) => (
+                                    <SharedUser key={user.id} user={user} virtualboxId={data.id} />
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                </div>
+                        </div>
+                    </>
+                ) : null}
             </DialogContent>
         </Dialog>
     )

@@ -5,9 +5,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { deleteVirtualbox, updateVirtualbox } from "@/lib/actions"
 import { VirtualBox } from "@/lib/types"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Form, useForm } from "react-hook-form"
 import z from "zod"
@@ -19,7 +21,9 @@ const formSchema = z.object({
 
 const EditVirtualboxModal = ({open, setOpen, data}: {open: boolean, setOpen: (open: boolean) => void, data: VirtualBox}) => {
     const [loading, setLoading] = useState(false)
+    const [loadingDelete, setLoadingDelete] = useState(false)
 
+    const router = useRouter()
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -30,6 +34,19 @@ const EditVirtualboxModal = ({open, setOpen, data}: {open: boolean, setOpen: (op
 
     const onSubmit = async (values: z.infer<typeof formSchema>) => {
         console.log(values)
+
+        setLoading(true)
+
+        await updateVirtualbox({id: data.id, ...values})
+        setLoading(false)
+    }
+
+    const onDelete = async () => {
+        setLoadingDelete(true)
+
+        await deleteVirtualbox(data.id)
+
+        router.push("/dashboard")
     }
 
     return (
@@ -46,6 +63,7 @@ const EditVirtualboxModal = ({open, setOpen, data}: {open: boolean, setOpen: (op
                                 <FormControl>
                                     <Input placeholder="My Project" {...field} />
                                 </FormControl>
+                                <FormMessage />
                             </FormItem>
                         )} />
                         <FormField control={form.control} name="visibility" render={({field}) => (
@@ -71,11 +89,20 @@ const EditVirtualboxModal = ({open, setOpen, data}: {open: boolean, setOpen: (op
                                     <Loader2 className="animate-spin mr-2 h-4 w-4" /> Loading...
                                 </> 
                             ) : (
-                                "Submit"
+                                "Update Virtualbox"
                             )}
                         </Button>
                     </form>
                 </Form>
+                <Button disabled={loadingDelete} onClick={onDelete} variant={"destructive"} className="w-full">
+                    {loadingDelete ? (
+                        <>
+                            <Loader2 className="animate-spin mr-2 h-4 w-4" /> Loading...
+                        </> 
+                    ) : (
+                        "Delete Virtualbox"
+                    )}
+                </Button>
             </DialogContent>
         </Dialog>
     )
