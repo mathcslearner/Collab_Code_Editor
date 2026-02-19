@@ -14,6 +14,7 @@ import { io } from "socket.io-client"
 import {processFileType} from "@/lib/utils"
 import { toast } from "sonner"
 import EditorTerminal from "./terminal"
+import GenerateInput from "./generate"
 
 const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: string}) => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
@@ -30,21 +31,37 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
     const monacoRef = useRef<typeof monaco | null>(null)
     const [cursorLine, setCursorLine] = useState(0)
     const generateRef = useRef<HTMLDivElement>(null)
-    const[generate, setGenerate] = useState({show: false, id: ""})
+    const[generate, setGenerate] = useState<{show: boolean, id: string, width: number, widget: monaco.editor.IContentWidget | undefined, pref: monaco.editor.ContentWidgetPositionPreference[]}>({show: false, id: "", width: 0, widget: undefined, pref: [] })
     const [decorations, setDecorations] = useState<{
         options: monaco.editor.IModelDecoration[]
         instance: monaco.editor.IEditorDecorationsCollection | undefined
     }>({options: [], instance: undefined})
+    const editorContainerRef = useRef<HTMLDivElement>(null)
+    const generateWidgetRef = useRef<HTMLDivElement>(null)
 
     const socket = io(
         `http://localhost:4000?userId=${userId}&virtualboxId=${virtualboxId}`
     )
 
+    const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+            const {width} = entry.contentRect 
+            setGenerate((prev) => {
+                return {...prev, width}
+            })
+        } 
+    })
+
     useEffect(() => {
         socket.connect()
 
+        if (editorContainerRef.current) {
+            resizeObserver.observe(editorContainerRef.current)
+        }
+
         return () => {
             socket.disconnect()
+            resizeObserver.disconnect()
         }
     }, [])
 
@@ -143,13 +160,22 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
             })
         })
 
+        editor.onDidBlurEditorText((e) => {
+            setDecorations((prev) => {
+                return {
+                    ...prev,
+                    options: []
+                }
+            })
+        })
+
         editor.addAction({
             id: "generate",
             label: "Generate",
             keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyG],
             precondition: "editorTextFocus && !suggestWidgetVisible && !renameInputVisible && !inSnippetMode && !quickFixWidgetVisible",
             run: () => setGenerate((prev) => {
-                return {...prev, show: !prev.show}
+                return {...prev, show: !prev.show, pref: [monaco.editor.ContentWidgetPositionPreference.BELOW]}
             })
         })
     }
@@ -168,6 +194,36 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
                     return {...prev, id}
                 })
             })
+
+            if (!generateWidgetRef.current) return 
+
+            const widgetElement = generateWidgetRef.current
+
+            const contentWidget = {
+                getDomNode: () => {
+                    return widgetElement
+                },
+                getId: () => {
+                    return "generate.widget"
+                },
+                getPosition: () => {
+                    return {
+                        position: {
+                            lineNumber: cursorLine,
+                            column: 1
+                        },
+                        preference: generate.pref
+                    }
+                }
+            }
+
+            setGenerate((prev) => {return {...prev, widget: contentWidget}})
+
+            editorRef.current?.addContentWidget(contentWidget)
+            if (generateRef.current && generateWidgetRef.current) {
+                editorRef.current?.applyFontInfo(generateRef.current)
+                editorRef.current?.applyFontInfo(generateWidgetRef.current)
+            }
         } else {
             editorRef.current?.changeViewZones(function (changeAccessor) {
                 if (!generateRef.current) return
@@ -176,11 +232,22 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
                     return {...prev, id: ""}
                 })
             })
+
+            if (!generate.widget) return
+            editorRef.current?.removeContentWidget(generate.width as any)
+            setGenerate((prev) => {
+                return {
+                    ...prev,
+                    widget: undefined
+                }
+            })
         }
     }, [generate.show])
 
     useEffect(() => {
-        if (decorations.options.length === 0) return
+        if (decorations.options.length === 0) {
+            decorations.instance?.clear()
+        }
 
         if (decorations.instance) {
             decorations.instance.set(decorations.options)
@@ -251,8 +318,27 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
 
     return (
         <>
-        <div className="bg-blue-500" ref={generateRef}>
-            {generate.show ? "Hello" : null}
+        <div ref={generateRef} />
+        <div className="z-50 p-1" ref={generateWidgetRef}>
+            {generate.show ? (
+                <GenerateInput cancel={() => {}} submit={(str: string) => {}} width={generate.width - 90} onExpand={() => {
+                    editorRef.current?.changeViewZones(function (changeAccessor) {
+                        changeAccessor.removeZone(generate.id)
+
+                        if (!generateRef.current) return
+
+                        const id = changeAccessor.addZone({
+                            afterLineNumber: cursorLine,
+                            heightInLines: 12,
+                            domNode: generateRef.current
+                        })
+        
+                        setGenerate((prev) => {
+                            return {...prev, id}
+                        })
+                    })
+                }} />
+            ) : null}
         </div>
         <Sidebar files={files} selectFile={selectFile} handleRename={handleRename} handleDeleteFile={handleDeleteFile} handleDeleteFolder={handleDeleteFolder} socket={socket} addNew={(name, type) => {
             if (type === "file") {
@@ -270,7 +356,7 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
                         </Tab>
                     ))}
                 </div>
-                <div className="grow w-full overflow-hidden rounded-lg relative">
+                <div ref={editorContainerRef} className="grow w-full overflow-hidden rounded-lg relative">
                     {activeId === null ? (
                         <>
                             <div className="flex items-center w-full h-full justify-center text-xl font-medium text-secondary select-none">
