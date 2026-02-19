@@ -17,7 +17,7 @@ const UserButton = ({userData}: {userData: User}) => {
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <div className="w-9 h-9 rounded-full overflow-hidden font-mon bg-gradient-to-t from-neutral-800 to-neutral-600 flex items-center text-sm font-medium justify-center">
-                    {userData.name.split(" ").slice(0, 2).map((name) => name[0].toUpperCase())}
+                    {userData?.name?.split(" ").slice(0, 2).map((name) => name[0].toUpperCase())}
                 </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">

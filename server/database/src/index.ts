@@ -42,7 +42,10 @@ export default {
 				if (params.has("id")) {
 					const id = params.get("id") as string
 					const res = await db.query.virtualbox.findFirst({
-						where: (virtualbox, {eq}) => eq(virtualbox.id, id)
+						where: (virtualbox, {eq}) => eq(virtualbox.id, id),
+						with: {
+							usersToVirtualboxes: true
+						}
 					})
 					return json(res ?? {})
 				} else {
@@ -95,6 +98,34 @@ export default {
 				await env.STORAGE.fetch(initStorageRequest)
 				return new Response(vb.id, {status: 200})
 			}
+		} else if (path === "/api/virtualbox/share" && method === "POST") {
+			const shareSchema = z.object({
+				virtualboxId: z.string(),
+				email: z.string()
+			})
+
+			const body = await request.json()
+
+			const {virtualboxId, email} = shareSchema.parse(body)
+
+			const user = await db.query.user.findFirst({
+				where: (user, {eq}) => eq(user.email, email),
+				with: {
+					usersToVirtualboxes: true
+				}
+			})
+
+			if (!user) {
+				return new Response("No user associated with email", {status: 400})
+			}
+
+			if (user.usersToVirtualboxes.find((utv) => utv.virtualboxId === virtualboxId)) {
+				return new Response("User already has access", {status: 400})
+			}
+
+			await db.insert(schema.usersToVirtualboxes).values({userId: user.id, virtualboxId}).get()
+
+			return success
 		} else if (path === "/api/user") {
 			if (method === "GET") {
 				const params = url.searchParams;
@@ -104,7 +135,8 @@ export default {
 					const res = await db.query.user.findFirst({
 						where: (user, {eq}) => eq(user.id, id),
 						with: {
-							virtualbox: true
+							virtualbox: true,
+							usersToVirtualboxes: true
 						}
 					})
 					return json(res ?? {})

@@ -11,6 +11,12 @@ export type VirtualBox = {
     type: "react" | "node"
     visibility: "public" | "private" 
     userId: string
+    usersToVirtualboxes: UsersToVirtualboxes[]
+}
+
+export type UsersToVirtualboxes = {
+    userId: string
+    virtualboxId: string
 }
 
 export type R2Files = {

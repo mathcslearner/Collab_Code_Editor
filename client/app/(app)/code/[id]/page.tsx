@@ -1,7 +1,7 @@
 
 import Navbar from "@/components/editor/navbar"
 import { TFile, TFolder } from "@/components/editor/sidebar/types"
-import { R2Files, User, VirtualBox} from "@/lib/types"
+import { R2Files, User, UsersToVirtualboxes, VirtualBox} from "@/lib/types"
 import { currentUser } from "@clerk/nextjs/server"
 import dynamic from "next/dynamic"
 import { notFound, redirect } from "next/navigation"
@@ -20,6 +20,16 @@ const getVirtualboxData = async (id: string) => {
   return virtualboxData
 }
 
+const getSharedUsers = async (usersToVirtualboxes: UsersToVirtualboxes[]) => {
+  const shared = await Promise.all(usersToVirtualboxes?.map(async (user) => {
+    const userRes = await fetch(`https://database.mzli.workers.dev/api/user?id=${user.id}`)
+    const userData: User = await userRes.json()
+    return {id: userData.id, name: userData.name}
+  }))
+
+  return shared
+}
+
 export default async function CodePage({params}: {params: {id: string}}) {
   const user = await currentUser();
   const {id: virtualboxId} = await params
@@ -30,11 +40,12 @@ export default async function CodePage({params}: {params: {id: string}}) {
 
   const userData = await getUserData(user.id)
   const virtualboxData = await getVirtualboxData(virtualboxId)
+  const shared = await getSharedUsers(virtualboxData.usersToVirtualboxes ?? [])
 
   return (
     <div className="flex w-screen flex-col h-screen bg-background">
       <div className="h-12 flex">
-        <Navbar userData={userData} virtualboxData={virtualboxData} />
+        <Navbar userData={userData} virtualboxData={virtualboxData} shared={shared} />
       </div>
       <div className="w-screen flex grow">
         <CodeEditor userId={user.id} virtualboxId={virtualboxId} /> 

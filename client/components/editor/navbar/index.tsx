@@ -9,14 +9,14 @@ import EditVirtualboxModal from "./edit"
 import { Button } from "@/components/ui/button"
 import ShareVirtualboxModal from "./share"
 
-const Navbar = ({userData, virtualboxData}: {userData: User, virtualboxData: VirtualBox}) => {
+const Navbar = ({userData, virtualboxData, shared}: {userData: User, virtualboxData: VirtualBox, shared: {id: string, name: string}[]}) => {
     const [isEditOpen, setIsEditOpen] = useState(false)
     const [isShareOpen, setIsShareOpen] = useState(false)
 
     return (
         <>
         <EditVirtualboxModal open={isEditOpen} setOpen={setIsEditOpen} data = {virtualboxData} />
-        <ShareVirtualboxModal open={isShareOpen} setOpen={setIsShareOpen} data={virtualboxData} />
+        <ShareVirtualboxModal open={isShareOpen} setOpen={setIsShareOpen} data={virtualboxData} shared={shared} />
         <div className="h-14 px-2 w-full border-b border-border flex items-center justify-between">
             <div className="flex items-center space-x-4">
                 <Link href={"/"} className="ring-offset-2 ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none rounded-sm">

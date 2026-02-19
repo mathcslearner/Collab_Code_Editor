@@ -34,3 +34,26 @@ export const updateVirtualbox = async (body: {id: string, name?: string, visibil
 
     revalidatePath("/dashboard")
 }
+
+export const shareVirtualbox = async (virtualboxId: string, email:string) => {
+    try {
+        const res = await fetch("https://database.mzli.workers.dev/api/virtualbox/share", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application.json"
+            },
+            body: JSON.stringify({virtualboxId, email})
+        })
+
+        const text = await res.text()
+
+        if (res.status !== 200) {
+            return {success: false, message: text}
+        }
+
+        revalidatePath(`/code/${virtualboxId}`)
+        return {success: true, message: "Shared successfully"}
+    } catch (err) {
+        return {success: false, message: err}
+    }
+}
