@@ -6,6 +6,7 @@ import { Terminal } from "@xterm/xterm"
 import { decodeTerminalResponse } from "@/lib/utils"
 import {FitAddon} from "@xterm/addon-fit"
 import "./xterm.css"
+import { Loader2 } from "lucide-react"
 
 const EditorTerminal = ({socket}: {socket: Socket}) => {
     const terminalRef = useRef(null)
@@ -71,7 +72,13 @@ const EditorTerminal = ({socket}: {socket: Socket}) => {
 
     return (
         <div>
-            <div ref={terminalRef} className="w-full h-1/2 text-left"></div>
+            <div ref={terminalRef} className="w-full h-full text-sm text-left">
+                {term === null ? (
+                <div className="flex items-center text-muted-foreground p-2">
+                    <Loader2 className="animate-spin mr-2 w-4 h-4" />
+                    <span>Connecting to terminal...</span>
+                </div>) : null}
+            </div>
         </div>
     )
 }

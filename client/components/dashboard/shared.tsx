@@ -3,6 +3,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import Image from "next/image"
 import { Button } from "../ui/button"
 import { ChevronRight } from "lucide-react"
+import Avatar from "../ui/avatar"
 
 const DashboardSharedWithMe = ({virtualboxes}: {virtualboxes: VirtualBox[]}) => {
     return (
@@ -29,7 +30,7 @@ const DashboardSharedWithMe = ({virtualboxes}: {virtualboxes: VirtualBox[]}) => 
                                 </TableCell>
                                 <TableCell>
                                     <div className="flex items-center">
-                                        <div className="h-5 w-5 bg-red-500 rounded-full mr-2"></div>
+                                        <Avatar name="Ming Zhe Li" className="mr-2" />
                                         Ming Zhe Li 
                                     </div>
                                 </TableCell>

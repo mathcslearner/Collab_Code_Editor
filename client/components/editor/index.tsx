@@ -1,6 +1,6 @@
 "use client"
 
-import { FileJson, X } from "lucide-react"
+import { FileJson, Plus, SquareTerminal, X } from "lucide-react"
 import { Button } from "../ui/button"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../ui/resizable"
 import { Editor, OnMount } from "@monaco-editor/react"
@@ -25,6 +25,7 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
     const [files, setFiles] = useState<(TFile|TFolder)[]>([])
     const [editorLanguage, setEditorLanguage] = useState<string|undefined>(undefined)
     const [activeFile, setActiveFile] = useState<string|null>(null)
+    const [terminals, setTerminals] = useState<string[]>([])
 
     const socket = io(
         `http://localhost:4000?userId=${userId}&virtualboxId=${virtualboxId}`
@@ -151,7 +152,7 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
     }
 
     const handleDeleteFolder = (folder: TFolder) => {
-        
+
     }
 
     return (
@@ -209,8 +210,13 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
                     <ResizableHandle />
                     <ResizablePanel defaultSize={50} minSize={20} className="p-2 flex flex-col">
                         <div className="h-10 w-full flex gap-2">
-                            <Tab selected>Node.js</Tab>
-                            <Tab>Console</Tab>
+                            <Tab selected>
+                                <SquareTerminal className="w-4 h-4 mr-2" />
+                                Shell
+                            </Tab>
+                            <Button size={"smIcon"} variant={"secondary"} className="font-normal select-none text-muted-foreground">
+                                <Plus className="w-4 h-4" />
+                            </Button>
                         </div>
                         <div className="w-full relative grow rounded-lg bg-secondary">
                             {socket ? <EditorTerminal socket={socket} /> : null}
