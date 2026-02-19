@@ -3,7 +3,7 @@
 import { FileJson, Plus, SquareTerminal, X } from "lucide-react"
 import { Button } from "../ui/button"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../ui/resizable"
-import { Editor, OnMount } from "@monaco-editor/react"
+import { BeforeMount, Editor, OnMount } from "@monaco-editor/react"
 import { useEffect, useRef, useState } from "react"
 import monaco from "monaco-editor"
 import Sidebar from "./sidebar"
@@ -26,6 +26,15 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
     const [editorLanguage, setEditorLanguage] = useState<string|undefined>(undefined)
     const [activeFile, setActiveFile] = useState<string|null>(null)
     const [terminals, setTerminals] = useState<string[]>([])
+
+    const monacoRef = useRef<typeof monaco | null>(null)
+    const [cursorLine, setCursorLine] = useState(0)
+    const generateRef = useRef<HTMLDivElement>(null)
+    const[generate, setGenerate] = useState({show: false, id: ""})
+    const [decorations, setDecorations] = useState<{
+        options: monaco.editor.IModelDecoration[]
+        instance: monaco.editor.IEditorDecorationsCollection | undefined
+    }>({options: [], instance: undefined})
 
     const socket = io(
         `http://localhost:4000?userId=${userId}&virtualboxId=${virtualboxId}`
@@ -103,7 +112,87 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
 
     const handleEditorMount: OnMount = (editor, monaco) => {
         editorRef.current = editor
+        monacoRef.current = monaco
+
+        editor.onDidChangeCursorPosition((e) => {
+            const {column, lineNumber} = e.position
+            if (lineNumber === cursorLine) return
+            setCursorLine(lineNumber)
+
+            const model = editor.getModel()
+            const endColumn = model?.getLineContent(lineNumber).length || 0
+
+            //@ts-ignore
+            setDecorations((prev) => {
+                return {
+                    ...prev, 
+                    options: [
+                        {
+                        range: new monaco.Range(
+                            lineNumber,
+                            column,
+                            lineNumber,
+                            endColumn
+                        ),
+                        options: {
+                            afterContentClassName: "inline-decoration"
+                        }
+                        }
+                    ]
+                }
+            })
+        })
+
+        editor.addAction({
+            id: "generate",
+            label: "Generate",
+            keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyG],
+            precondition: "editorTextFocus && !suggestWidgetVisible && !renameInputVisible && !inSnippetMode && !quickFixWidgetVisible",
+            run: () => setGenerate((prev) => {
+                return {...prev, show: !prev.show}
+            })
+        })
     }
+
+    useEffect(() => {
+        if (generate.show) {
+            editorRef.current?.changeViewZones(function (changeAccessor) {
+                if (!generateRef.current) return
+                const id = changeAccessor.addZone({
+                    afterLineNumber: cursorLine,
+                    heightInLines: 3,
+                    domNode: generateRef.current
+                })
+
+                setGenerate((prev) => {
+                    return {...prev, id}
+                })
+            })
+        } else {
+            editorRef.current?.changeViewZones(function (changeAccessor) {
+                if (!generateRef.current) return
+                changeAccessor.removeZone(generate.id)
+                setGenerate((prev) => {
+                    return {...prev, id: ""}
+                })
+            })
+        }
+    }, [generate.show])
+
+    useEffect(() => {
+        if (decorations.options.length === 0) return
+
+        if (decorations.instance) {
+            decorations.instance.set(decorations.options)
+        } else {
+            const instance = editorRef.current?.createDecorationsCollection()
+            instance?.set(decorations.options)
+
+            setDecorations((prev) => {
+                return {...prev, instance}
+            }) 
+        }
+    }, [decorations.options])
 
     const handleRename = (id: string, newName: string, oldName: string, type:"file" | "folder") => {
         if (newName === oldName) {
@@ -151,12 +240,20 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
         closeTab(file)
     }
 
-    const handleDeleteFolder = (folder: TFolder) => {
+    const handleDeleteFolder = (folder: TFolder) => {}
 
+    const handleEditorWillMount: BeforeMount = (monaco) => {
+        monaco.editor.addKeyBindingRules([{
+            keybinding: monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyG,
+            command: "null"
+        }])
     }
 
     return (
         <>
+        <div className="bg-blue-500" ref={generateRef}>
+            {generate.show ? "Hello" : null}
+        </div>
         <Sidebar files={files} selectFile={selectFile} handleRename={handleRename} handleDeleteFile={handleDeleteFile} handleDeleteFolder={handleDeleteFolder} socket={socket} addNew={(name, type) => {
             if (type === "file") {
                 setFiles((prev) => [...prev, {id: `projects/${virtualboxId}/${name}`, name, type: "file"}])
@@ -182,7 +279,7 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
                             </div>
                         </>
                     ) : clerk.loaded ? (
-                        <Editor height={"100%"} defaultLanguage="typescript" theme="vs-dark" onMount={handleEditorMount} onChange={(value) => {setTabs((prev) => prev.map((tab) => tab.id === activeId ? {...tab, saved: false} : tab))}} language={editorLanguage}
+                        <Editor height={"100%"} defaultLanguage="typescript" theme="vs-dark" beforeMount={handleEditorWillMount} onMount={handleEditorMount} onChange={(value) => {setTabs((prev) => prev.map((tab) => tab.id === activeId ? {...tab, saved: false} : tab))}} language={editorLanguage}
                         options={{
                             minimap: {
                                 enabled: false
@@ -192,6 +289,8 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
                                 top: 4
                             },
                             scrollBeyondLastLine: false,
+                            fixedOverflowWidgets: true,
+                            fontFamily: "var(--font-geist-mono)"
                         }} value = {activeFile ?? ""}/>
                     ) : null}
                 </div>

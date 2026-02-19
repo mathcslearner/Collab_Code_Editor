@@ -19,7 +19,9 @@ const EditorTerminal = ({socket}: {socket: Socket}) => {
             cursorBlink: true,
             theme: {
                 background: "#262626"
-            }
+            },
+            fontSize: 14,
+            fontFamily: "var(--font-geist-mono)"
         })
 
         setTerm(terminal)
@@ -35,7 +37,7 @@ const EditorTerminal = ({socket}: {socket: Socket}) => {
         const onConnect = () => {
             setTimeout(() => {
                 socket.emit("createTerminal", {id: "testId"})
-            }, 500)
+            }, 2000)
         }
 
         const onTerminalResponse = (response: {data: string}) => {
