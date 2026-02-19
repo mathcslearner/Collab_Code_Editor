@@ -22,6 +22,8 @@ const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const node_pty_1 = require("node-pty");
 const os_1 = __importDefault(require("os"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT || 4000;
 const httpServer = (0, http_1.createServer)(app);
@@ -155,6 +157,40 @@ io.on("connection", (socket) => __awaiter(void 0, void 0, void 0, function* () {
             console.log("Error writing to terminal", err);
         }
     });
+    socket.on("generateCode", (fileName, code, line, instructions, callback) => __awaiter(void 0, void 0, void 0, function* () {
+        console.log("Generating code...");
+        const res = yield fetch("https://api.cloudflare.com/client/v4/accounts/b5c0804fd695d94ced044d2fb5aaf698/ai/run/@cf/meta/llama-3-8b-instruct", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${process.env.BEARER_TOKEN}`,
+                "Content-Type": "applications/json"
+            },
+            body: JSON.stringify({
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are an expert coding assistant who reads from an existing code file, and suggests code to add to the file. You may be given instructions on what to generate, which you should follow. You should generate code that is correct, efficient, and followsbest practices. You should also generate code that is clear and easy to read. "
+                    },
+                    {
+                        role: "user",
+                        content: `The file is called ${fileName}.`
+                    },
+                    {
+                        role: "user",
+                        content: `Here are my instructions on what to generate: ${instructions}.`
+                    },
+                    {
+                        role: "user",
+                        content: `Suggest me code to insert at line ${line} in my file. Give only the code, and NOTHING else. DO NOT include backticks in your response. My code file content is as follows: 
+                        
+                        ${code}.`
+                    }
+                ]
+            })
+        });
+        const json = yield res.json();
+        callback(json);
+    }));
     socket.on("disconnect", () => {
         Object.entries(terminals).forEach((t) => {
             const { terminal, onData, onExit } = t[1];

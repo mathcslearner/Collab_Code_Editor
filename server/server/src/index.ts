@@ -10,6 +10,10 @@ import fs from "fs"
 import {IDisposable, IPty, spawn} from "node-pty"
 import os from "os"
 
+import dotenv from "dotenv";
+
+dotenv.config();
+
 const app: Express = express();
 
 const port = process.env.PORT || 4000
@@ -181,6 +185,43 @@ io.on("connection", async (socket) => {
         } catch (err) {
             console.log("Error writing to terminal", err)
         }
+    })
+
+    socket.on("generateCode", async (fileName: string, code: string, line: number, instructions: string, callback) => {
+        console.log("Generating code...")
+
+        const res = await fetch("https://api.cloudflare.com/client/v4/accounts/b5c0804fd695d94ced044d2fb5aaf698/ai/run/@cf/meta/llama-3-8b-instruct", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${process.env.BEARER_TOKEN}`,
+                "Content-Type": "applications/json"
+            },
+            body: JSON.stringify({
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are an expert coding assistant who reads from an existing code file, and suggests code to add to the file. You may be given instructions on what to generate, which you should follow. You should generate code that is correct, efficient, and followsbest practices. You should also generate code that is clear and easy to read. "
+                    },
+                    {
+                        role: "user",
+                        content: `The file is called ${fileName}.`
+                    },
+                    {
+                        role: "user",
+                        content: `Here are my instructions on what to generate: ${instructions}.`
+                    },
+                    {
+                        role: "user",
+                        content: `Suggest me code to insert at line ${line} in my file. Give only the code, and NOTHING else. DO NOT include backticks in your response. My code file content is as follows: 
+                        
+                        ${code}.`
+                    }
+                ]
+            })
+        })
+
+        const json = await res.json() 
+        callback(json)  
     })
 
     socket.on("disconnect", () => {

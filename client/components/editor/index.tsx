@@ -31,7 +31,7 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
     const monacoRef = useRef<typeof monaco | null>(null)
     const [cursorLine, setCursorLine] = useState(0)
     const generateRef = useRef<HTMLDivElement>(null)
-    const[generate, setGenerate] = useState<{show: boolean, id: string, width: number, widget: monaco.editor.IContentWidget | undefined, pref: monaco.editor.ContentWidgetPositionPreference[]}>({show: false, id: "", width: 0, widget: undefined, pref: [] })
+    const[generate, setGenerate] = useState<{show: boolean, id: string, width: number, line: number, widget: monaco.editor.IContentWidget | undefined, pref: monaco.editor.ContentWidgetPositionPreference[]}>({show: false, id: "", width: 0, widget: undefined, line: 0, pref: [] })
     const [decorations, setDecorations] = useState<{
         options: monaco.editor.IModelDecoration[]
         instance: monaco.editor.IEditorDecorationsCollection | undefined
@@ -191,7 +191,7 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
                 })
 
                 setGenerate((prev) => {
-                    return {...prev, id}
+                    return {...prev, id, line: cursorLine}
                 })
             })
 
@@ -234,7 +234,7 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
             })
 
             if (!generate.widget) return
-            editorRef.current?.removeContentWidget(generate.width as any)
+            editorRef?.current?.removeContentWidget(generate.widget as any)
             setGenerate((prev) => {
                 return {
                     ...prev,
@@ -321,7 +321,7 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
         <div ref={generateRef} />
         <div className="z-50 p-1" ref={generateWidgetRef}>
             {generate.show ? (
-                <GenerateInput cancel={() => {}} submit={(str: string) => {}} width={generate.width - 90} onExpand={() => {
+                <GenerateInput socket={socket} data={{fileName: tabs.find((t) => t.id === activeId)?.name ?? "", code: editorRef.current?.getValue() ?? "", line: generate.line}} editor={{language: editorLanguage!}} cancel={() => {}} submit={(str: string) => {}} width={generate.width - 90} onExpand={() => {
                     editorRef.current?.changeViewZones(function (changeAccessor) {
                         changeAccessor.removeZone(generate.id)
 
@@ -337,6 +337,20 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
                             return {...prev, id}
                         })
                     })
+                }} onAccept={(code: string) => {
+                    const line = generate.line
+                    setGenerate((prev) => {
+                        return {
+                            ...prev, show: !prev.show
+                        }
+                    })
+                    console.log("accepted", code)
+                    const file = editorRef.current?.getValue()
+
+                    const lines = file?.split("\n") || []
+                    lines.splice(line - 1, 0, code)
+                    const updatedFile = lines.join("\n")
+                    editorRef.current?.setValue(updatedFile)
                 }} />
             ) : null}
         </div>

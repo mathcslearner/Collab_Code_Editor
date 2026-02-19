@@ -69,3 +69,25 @@ export const unshareVirtualbox = async (virtualboxId: string, userId: string) =>
 
     revalidatePath(`/code/${virtualboxId}`)
 }
+
+export const generateCode = async (code: string, line: number) => {
+    const res = await fetch("https://api.cloudflare.com/client/v4/accounts/b5c0804fd695d94ced044d2fb5aaf698/ai/run/@cf/meta/llama-3-8b-instruct", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${process.env.BEARER_TOKEN}`,
+            "Content-Type": "applications/json"
+        },
+        body: JSON.stringify({
+            messages: [
+                {
+                    role: "system",
+                    content: "You are an expert coding assistant who reads from an existing code file, and suggests code to add to the file"
+                },
+                {
+                    role: "user",
+                    content: ""
+                }
+            ]
+        })
+    })
+}
