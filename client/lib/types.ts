@@ -3,6 +3,7 @@ export type User = {
     name: string 
     email: string
     virtualbox: VirtualBox[]
+    usersToVirtualboxes: UsersToVirtualboxes[]
 }
 
 export type VirtualBox = {

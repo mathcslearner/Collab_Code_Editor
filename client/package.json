@@ -12,6 +12,10 @@
     "@clerk/nextjs": "^6.37.4",
     "@clerk/themes": "^2.4.52",
     "@hookform/resolvers": "^5.2.2",
+    "@liveblocks/client": "^3.14.0",
+    "@liveblocks/node": "^3.14.0",
+    "@liveblocks/react": "^3.14.0",
+    "@liveblocks/yjs": "^3.14.0",
     "@monaco-editor/react": "^4.7.0",
     "@xterm/addon-fit": "^0.11.0",
     "@xterm/xterm": "^6.0.0",
@@ -29,6 +33,9 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
     "vscode-icons-js": "^11.6.1",
+    "y-monaco": "^0.1.6",
+    "y-protocols": "^1.0.7",
+    "yjs": "^13.6.29",
     "zod": "^4.3.6"
   },
   "devDependencies": {

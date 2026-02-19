@@ -15,6 +15,11 @@ import {processFileType} from "@/lib/utils"
 import { toast } from "sonner"
 import EditorTerminal from "./terminal"
 import GenerateInput from "./generate"
+import * as Y from "yjs"
+import {MonacoBinding} from "y-monaco"
+import {LiveblocksYjsProvider} from "@liveblocks/yjs"
+import { Awareness } from "y-protocols/awareness.js"
+import { useRoom } from "@/liveblocks.config"
 
 const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: string}) => {
     const editorRef = useRef<null | monaco.editor.IStandaloneCodeEditor>(null);
@@ -179,6 +184,29 @@ const CodeEditor = ({userId, virtualboxId}: {userId: string, virtualboxId: strin
             })
         })
     }
+
+    const room = useRoom()
+
+    useEffect(() => {
+        if (!editorRef.current) return
+
+        const yDoc = new Y.Doc()
+        const yText = yDoc.getText("monaco")
+        const yProvider: any = new LiveblocksYjsProvider(room, yDoc)
+
+        const binding = new MonacoBinding(
+            yText,
+            editorRef.current.getModel() as monaco.editor.ITextModel,
+            new Set([editorRef.current]),
+            yProvider.awareness as Awareness
+        )
+
+        return () => {
+            yDoc.destroy()
+            yProvider.destroy()
+            binding.destroy()
+        }
+    }, [editorRef, room])
 
     useEffect(() => {
         if (generate.show) {

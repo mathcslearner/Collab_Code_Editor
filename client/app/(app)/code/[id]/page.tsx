@@ -1,5 +1,6 @@
 
 import Navbar from "@/components/editor/navbar"
+import Room from "@/components/editor/live/room"
 import { TFile, TFolder } from "@/components/editor/sidebar/types"
 import { R2Files, User, UsersToVirtualboxes, VirtualBox} from "@/lib/types"
 import { currentUser } from "@clerk/nextjs/server"
@@ -43,13 +44,13 @@ export default async function CodePage({params}: {params: {id: string}}) {
   const shared = await getSharedUsers(virtualboxData.usersToVirtualboxes ?? [])
 
   return (
-    <div className="flex w-screen flex-col h-screen bg-background">
-      <div className="h-12 flex">
-        <Navbar userData={userData} virtualboxData={virtualboxData} shared={shared} />
-      </div>
-      <div className="w-screen flex grow">
-        <CodeEditor userId={user.id} virtualboxId={virtualboxId} /> 
-      </div>
+    <div className="overflow-hidden flex w-screen flex-col h-screen bg-background">
+        <Room id={virtualboxId}>
+          <Navbar userData={userData} virtualboxData={virtualboxData} shared={shared} />
+          <div className="w-screen flex grow">
+            <CodeEditor userId={user.id} virtualboxId={virtualboxId} /> 
+          </div>
+       </Room>
     </div>
   )
 }
